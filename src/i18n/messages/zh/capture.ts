@@ -19,6 +19,8 @@ const capture: Messages["capture"] = {
     title: "无法使用实时摄像头",
     body: "点击按钮会打开 iPad 相机，请逐张拍摄。",
     fine: "在 HTTPS 地址下允许摄像头权限，即可实时拍摄。",
+    /** 카메라 권한이 거부됐을 때 */
+    denied: "摄像头权限已关闭。请在地址栏左侧的网站设置和设备设置（例如 iPad 设置 → Chrome → 相机）中允许使用摄像头，然后刷新页面。",
   },
   slot: (n: number) => `第 ${n} 格`,
   shoot: {

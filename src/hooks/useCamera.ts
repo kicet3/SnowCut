@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toShot, type Shot } from "@/lib/canvas";
+import type { Rect } from "@/lib/frame";
+import { measureVideo, similarRect } from "@/lib/letterbox";
 
 /** live: 실시간 카메라 / file: 카메라 앱으로 한 장씩 / pending: 준비 중 / stalled: 연결됐지만 화면이 오지 않음 */
 export type CameraMode = "pending" | "live" | "file" | "stalled";
@@ -16,6 +18,12 @@ const SIZES: MediaTrackConstraints[] = [
   { width: { ideal: 1920 }, height: { ideal: 1080 } },
   {},
 ];
+
+/** 실시간 카메라를 못 쓰는 이유. denied: 권한 거부(브라우저·기기 설정), unavailable: 그 밖의 이유 */
+export type CameraFailure = "denied" | "unavailable";
+
+/** 검은 띠를 다시 살펴보는 간격 (ms) */
+const LETTERBOX_INTERVAL = 700;
 
 /** 연결 뒤 첫 화면을 기다리는 시간 (ms). 넘으면 다음 크기로 다시 연결한다. */
 export const FIRST_FRAME_TIMEOUT = 4000;
@@ -91,6 +99,10 @@ export function useCamera(deviceId: string | null, text: CameraMessages) {
   const [devices, setDevices] = useState<CameraDevice[]>([]);
   /** 실제로 연결된 카메라 */
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [failure, setFailure] = useState<CameraFailure | null>(null);
+  /** 검은 띠를 뺀 실제 화면 영역 (원본 픽셀)과 그때의 원본 크기. 띠가 없으면 null */
+  const [crop, setCrop] = useState<{ rect: Rect; w: number; h: number } | null>(null);
+  const cropRef = useRef<Rect | null>(null);
   // 문구가 바뀌어도 카메라를 다시 연결하지 않도록 최신 값만 ref로 본다.
   const textRef = useRef(text);
   useEffect(() => {
@@ -128,6 +140,7 @@ export function useCamera(deviceId: string | null, text: CameraMessages) {
 
     (async () => {
       if (!navigator.mediaDevices?.getUserMedia) {
+        setFailure("unavailable");
         setMode("file");
         return;
       }
@@ -184,8 +197,12 @@ export function useCamera(deviceId: string | null, text: CameraMessages) {
           if (!cancelled) setDevices(list);
         });
         requestWakeLock();
-      } catch {
-        if (!cancelled) setMode("file");
+      } catch (err) {
+        if (cancelled) return;
+        // 권한 거부는 브라우저(사이트 설정)나 기기 설정(아이패드 설정 → Chrome → 카메라)에서 막힌 경우다.
+        const name = err instanceof DOMException ? err.name : "";
+        setFailure(name === "NotAllowedError" || name === "SecurityError" ? "denied" : "unavailable");
+        setMode("file");
       }
     })();
 
@@ -218,8 +235,42 @@ export function useCamera(deviceId: string | null, text: CameraMessages) {
       if (videoEl) videoEl.srcObject = null;
       wakeLock?.release().catch(() => {});
       setMode("pending");
+      setFailure(null);
+      cropRef.current = null;
+      setCrop(null);
     };
   }, [session, deviceId]);
+
+  // 카메라 화면 가장자리의 검은 띠를 찾아 둔다. 두 번 연속 같은 결과일 때만 바꿔 화면이 들썩이지 않게 한다.
+  useEffect(() => {
+    if (mode !== "live") return;
+    const video = videoRef.current;
+    if (!video) return;
+    const canvas = document.createElement("canvas");
+    let candidate: Rect | null | undefined;
+    const check = () => {
+      if (document.hidden || video.paused) return;
+      let found: Rect | null;
+      try {
+        found = measureVideo(video, canvas);
+      } catch {
+        return;
+      }
+      const { videoWidth: w, videoHeight: h } = video;
+      if (candidate !== undefined && similarRect(candidate, found, w, h) && !similarRect(cropRef.current, found, w, h)) {
+        cropRef.current = found;
+        setCrop(found ? { rect: found, w, h } : null);
+      }
+      candidate = found;
+    };
+    check();
+    const timer = setInterval(check, LETTERBOX_INTERVAL);
+    return () => {
+      clearInterval(timer);
+      canvas.width = 0;
+      canvas.height = 0;
+    };
+  }, [mode, session]);
 
   /** 지금 화면을 미리보기와 같은 거울 모드로 찍는다. */
   const grabFrame = useCallback((): Shot => {
@@ -228,7 +279,7 @@ export function useCamera(deviceId: string | null, text: CameraMessages) {
     if (!video || !video.videoWidth || !track || track.muted || track.readyState !== "live" || video.paused) {
       throw new Error(textRef.current.frozen);
     }
-    return toShot(video, true);
+    return toShot(video, true, cropRef.current);
   }, []);
 
   /** 같은 카메라로 다시 연결한다 (예: 빠졌던 카메라를 다시 꽂았을 때) */
@@ -237,5 +288,8 @@ export function useCamera(deviceId: string | null, text: CameraMessages) {
   /** 녹화에 쓸 카메라 스트림 */
   const getStream = useCallback(() => streamRef.current, []);
 
-  return { videoRef, mode, grabFrame, getStream, devices, activeId, restart };
+  /** 녹화 중에도 최신 값을 읽도록 함수로 준다. */
+  const getCrop = useCallback(() => cropRef.current, []);
+
+  return { videoRef, mode, failure, grabFrame, getStream, getCrop, crop, devices, activeId, restart };
 }

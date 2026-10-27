@@ -5,6 +5,7 @@ import { useCamera } from "@/hooks/useCamera";
 import { useI18n } from "@/i18n/I18nProvider";
 import { freeShot, shotFromFile, type Shot } from "@/lib/canvas";
 import { photoAspect, type LayoutKey } from "@/lib/frame";
+import { coverTransform } from "@/lib/letterbox";
 import { recordCamera, type Recording } from "@/lib/recorder";
 import { playShutter, unlockSound } from "@/lib/sound";
 import { ShotThumb } from "./ShotThumb";
@@ -39,7 +40,20 @@ export function CaptureScreen(props: Props) {
   const t = m.capture;
   // 노트북에 USB로 연결한 카메라(니콘 Zf 등 UVC 웹캠)를 고를 수 있다. 고른 카메라는 기억해 둔다.
   const [cameraId, setCameraId] = useState<string | null>(savedCamera);
-  const { videoRef, mode, grabFrame, getStream, devices, activeId, restart } = useCamera(cameraId, t.camera);
+  const { videoRef, mode, failure, grabFrame, getStream, getCrop, crop, devices, activeId, restart } = useCamera(cameraId, t.camera);
+  // 미리보기에서 카메라 화면의 검은 띠를 가리도록 비디오를 키운다. 그러려면 비디오 요소 크기를 알아야 한다.
+  const [viewSize, setViewSize] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      setViewSize((v) => (v.w === width && v.h === height ? v : { w: width, h: height }));
+    });
+    ro.observe(video);
+    return () => ro.disconnect();
+  }, [videoRef]);
+  const videoTransform = coverTransform(viewSize, { w: crop?.w ?? 0, h: crop?.h ?? 0 }, crop?.rect ?? null, true);
   const recordingRef = useRef<Recording | null>(null);
   const [recording, setRecording] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -85,7 +99,7 @@ export function CaptureScreen(props: Props) {
     discardRecording();
     const video = videoRef.current;
     if (!video) return;
-    const rec = recordCamera(video, getStream());
+    const rec = recordCamera(video, getStream(), true, getCrop);
     recordingRef.current = rec;
     setRecording(!!rec);
   };
@@ -234,6 +248,8 @@ export function CaptureScreen(props: Props) {
     }
   };
 
+  const counterText = nextEmpty === -1 ? t.done : t.progress(nextEmpty + 1, total);
+
   const shootLabel = running
     ? t.shoot.stop
     : mode === "file"
@@ -250,7 +266,7 @@ export function CaptureScreen(props: Props) {
             {isRetake ? t.backToResult : t.back}
           </button>
         </div>
-        <div className="counter">{nextEmpty === -1 ? t.done : t.progress(nextEmpty + 1, total)}</div>
+        <div className="counter">{counterText}</div>
         <div>
           {devices.length > 1 && (
             <label className="camera-select">
@@ -274,7 +290,11 @@ export function CaptureScreen(props: Props) {
 
       <div className="stage">
         <div className="viewfinder" style={{ "--ratio": aspect } as CSSProperties}>
-          <video ref={videoRef} playsInline muted autoPlay />
+          <video ref={videoRef} playsInline muted autoPlay style={{ transform: videoTransform }} />
+          {/* 아이패드에서는 위 줄 대신 화면 오른쪽 위에 보인다 (globals.css) */}
+          <div className="vf-counter" aria-hidden>
+            {counterText}
+          </div>
           {recording && (
             <div className="rec-badge" aria-label={t.recording}>
               REC
@@ -299,7 +319,7 @@ export function CaptureScreen(props: Props) {
             <div className="vf-message">
               <strong>{t.fileMode.title}</strong>
               <span>{t.fileMode.body}</span>
-              <span className="fine">{t.fileMode.fine}</span>
+              <span className="fine">{failure === "denied" ? t.fileMode.denied : t.fileMode.fine}</span>
             </div>
           )}
           {countdown !== null && (
@@ -316,7 +336,7 @@ export function CaptureScreen(props: Props) {
         ))}
       </div>
 
-      <div className="controls">
+      <div className={`controls${mode === "live" && !running ? " idle" : ""}`}>
         {error && <p className="error">{error}</p>}
         <button
           id="shootBtn"

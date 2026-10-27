@@ -1,4 +1,5 @@
 /** 촬영하는 동안의 화면을 영상으로 남긴다. iPad Safari는 MP4(H.264), 그 밖의 브라우저는 대개 WebM이다. */
+import type { Rect } from "./frame";
 
 const TYPES = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
 
@@ -74,9 +75,16 @@ type StreamCanvas = HTMLCanvasElement & { captureStream?: (fps?: number) => Medi
  * 가운데를 잘라 맞춘다 (MediaRecorder는 녹화 중 크기 변경을 잘 처리하지 못한다).
  * 캔버스 녹화를 못 하는 브라우저에서는 카메라 스트림을 그대로(반전 없이) 녹화한다.
  */
-export function recordCamera(video: HTMLVideoElement, camera: MediaStream | null, mirror = true): Recording | null {
-  const vw = video.videoWidth;
-  const vh = video.videoHeight;
+export function recordCamera(
+  video: HTMLVideoElement,
+  camera: MediaStream | null,
+  mirror = true,
+  /** 검은 띠를 뺀 영역 (원본 픽셀). 녹화 중에 바뀌어도 매 장면 새로 읽는다. */
+  getCrop: () => Rect | null = () => null,
+): Recording | null {
+  const first = getCrop();
+  const vw = first?.w ?? video.videoWidth;
+  const vh = first?.h ?? video.videoHeight;
   const canvas = document.createElement("canvas") as StreamCanvas;
   const ctx = canvas.getContext("2d");
   if (!vw || !vh || !ctx || typeof canvas.captureStream !== "function") {
@@ -89,12 +97,12 @@ export function recordCamera(video: HTMLVideoElement, camera: MediaStream | null
 
   let frame = 0;
   const draw = () => {
-    const w = video.videoWidth;
-    const h = video.videoHeight;
+    const r = getCrop() ?? { x: 0, y: 0, w: video.videoWidth, h: video.videoHeight };
+    const { w, h } = r;
     if (w && h) {
       const k = Math.max(canvas.width / w, canvas.height / h);
       ctx.setTransform(mirror ? -1 : 1, 0, 0, 1, mirror ? canvas.width : 0, 0);
-      ctx.drawImage(video, (canvas.width - w * k) / 2, (canvas.height - h * k) / 2, w * k, h * k);
+      ctx.drawImage(video, r.x, r.y, w, h, (canvas.width - w * k) / 2, (canvas.height - h * k) / 2, w * k, h * k);
     }
     frame = requestAnimationFrame(draw);
   };

@@ -34,8 +34,11 @@ export function coverCrop(w: number, h: number, r: { w: number; h: number }): Re
   return { x: (w - cw) / 2, y: (h - ch) / 2, w: cw, h: ch };
 }
 
-export function toShot(src: Drawable, mirror: boolean): Shot {
-  const { w, h } = sourceSize(src);
+/** crop을 주면 그 영역만 쓴다 (카메라 화면의 검은 띠를 뺀 영역). */
+export function toShot(src: Drawable, mirror: boolean, crop?: Rect | null): Shot {
+  const size = sourceSize(src);
+  const r = crop ?? { x: 0, y: 0, w: size.w, h: size.h };
+  const { w, h } = r;
   const s = Math.min(1, SHOT_MAX / Math.max(w, h));
   const c = document.createElement("canvas");
   c.width = Math.round(w * s);
@@ -46,7 +49,7 @@ export function toShot(src: Drawable, mirror: boolean): Shot {
     ctx.translate(c.width, 0);
     ctx.scale(-1, 1);
   }
-  ctx.drawImage(src, 0, 0, c.width, c.height);
+  ctx.drawImage(src, r.x, r.y, r.w, r.h, 0, 0, c.width, c.height);
   return c;
 }
 

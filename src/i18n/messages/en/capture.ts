@@ -19,6 +19,8 @@ const capture: Messages["capture"] = {
     title: "Live camera isn't available",
     body: "Tap the button to open the iPad camera. Take one photo at a time.",
     fine: "To shoot live, open the site over HTTPS and allow camera access.",
+    /** 카메라 권한이 거부됐을 때 */
+    denied: "Camera access is turned off. Allow the camera in the site settings (left of the address bar) and in your device settings (for example, iPad Settings → Chrome → Camera), then reload.",
   },
   slot: (n: number) => `Shot ${n}`,
   shoot: {
