@@ -22,7 +22,7 @@ interface Props {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const CAMERA_KEY = "fourcut.camera";
+const CAMERA_KEY = "snowcut.camera";
 
 function savedCamera(): string | null {
   try {

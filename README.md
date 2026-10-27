@@ -25,6 +25,28 @@ NEXT_PUBLIC_ADSENSE_SLOT_BOTTOM=3333333333           # (자주 묻는 질문 아
 - 광고 스크립트는 메인 페이지에만 들어갑니다. 촬영 화면은 일반 링크(전체 새로고침)로 열려서 스크립트가 따라가지 않으므로, 애드센스의 **자동 광고**를 켜도 촬영 화면에는 광고가 나오지 않습니다.
 - `/ads.txt`는 `NEXT_PUBLIC_ADSENSE_CLIENT` 값으로 빌드할 때 만들어집니다.
 
+### 커스텀 캐릭터 (누끼 서버)
+
+시작 화면의 **커스텀 캐릭터** 카드에서 이미지를 올리고, 남길 캐릭터 위를 눌러 점을 찍은 뒤 **누끼 따기**를 누르면 배경이 지워진 캐릭터가 프레임 위에 올라갑니다. 끌어서 옮기고, 두 손가락(또는 마우스 휠)·슬라이더로 크기와 회전을 바꾸며, 좌우 반전·흰 테두리(스티커)·맨 앞으로·삭제를 할 수 있습니다. 결과 화면 **옵션** 단계에서 실제 사진 위에 놓고 다시 고칠 수 있고, 저장·인쇄 이미지에 함께 들어갑니다.
+
+배경 제거는 [Background-Remover](https://github.com/Daek-You/Background-Remover)(FastAPI + SAM 2.1)를 따로 띄워 두고 그 API(`POST /background-removal/remove`, `image` + `points=[[x,y],...]` → 투명 PNG)를 부릅니다. 코드는 가져오지 않고 HTTP로만 연동합니다(그 저장소에는 라이선스 파일이 없습니다).
+
+```bash
+# 1) 누끼 서버 실행 (NVIDIA GPU 권장, CPU면 한 장에 20~30초). 자세한 방법은 그 저장소의 README.
+git clone https://github.com/Daek-You/Background-Remover.git && cd Background-Remover
+docker compose -f docker-compose-local.yml up --build     # 기본 포트 5000
+
+# 2-a) 개발: 앱이 서버를 직접 부른다. 서버 config/environments.py의 CORS_ORIGINS에 앱 주소를 넣는다.
+NEXT_PUBLIC_BG_REMOVER_URL=http://localhost:5000 npm run dev
+
+# 2-b) 배포(server.mjs): 같은 주소의 /bg-remover/* 를 누끼 서버로 넘긴다. CORS·혼합 콘텐츠 걱정이 없다.
+NEXT_PUBLIC_BG_REMOVER_URL=/bg-remover npm run build
+BG_REMOVER_URL=http://127.0.0.1:5000 npm run serve
+```
+
+- `NEXT_PUBLIC_BG_REMOVER_URL`이 없으면 누끼 버튼이 나오지 않고, 배경이 이미 투명한 PNG를 **배경 그대로 쓰기**로만 올릴 수 있습니다.
+- 누끼를 딸 때만 올린 캐릭터 이미지(긴 변 1600px 이하)가 그 서버로 전송됩니다. 촬영한 사진·영상은 여전히 기기 밖으로 나가지 않습니다.
+
 ## 실행
 
 Next.js 16(App Router, TypeScript) 앱이고 정적 파일로 내보냅니다(`output: "export"`). iPad Safari에서 **HTTPS 주소**로 열면 라이브 카메라와 카운트다운으로 촬영합니다.
