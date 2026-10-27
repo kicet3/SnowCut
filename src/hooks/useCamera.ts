@@ -3,17 +3,54 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toShot, type Shot } from "@/lib/canvas";
 
-/** live: 실시간 카메라 / file: 카메라 앱으로 한 장씩 / pending: 준비 중 */
-export type CameraMode = "pending" | "live" | "file";
+/** live: 실시간 카메라 / file: 카메라 앱으로 한 장씩 / pending: 준비 중 / stalled: 연결됐지만 화면이 오지 않음 */
+export type CameraMode = "pending" | "live" | "file" | "stalled";
 
-const SIZE = { width: { ideal: 1920 }, height: { ideal: 1440 } };
+/**
+ * 요청할 화면 크기. 앞에서부터 시도한다.
+ * USB 카메라(니콘 Zf 등)는 16:9만 내보내는 경우가 많고, Safari는 맞지 않는 크기를 요청하면
+ * 카메라를 연 채로 화면을 한 장도 보내지 않을 때가 있어 16:9 → 카메라 기본값 순으로 낮춘다.
+ */
+const SIZES: MediaTrackConstraints[] = [
+  { width: { ideal: 1920 }, height: { ideal: 1440 } },
+  { width: { ideal: 1920 }, height: { ideal: 1080 } },
+  {},
+];
+
+/** 연결 뒤 첫 화면을 기다리는 시간 (ms). 넘으면 다음 크기로 다시 연결한다. */
+export const FIRST_FRAME_TIMEOUT = 4000;
 
 /** deviceId가 있으면 그 카메라(예: USB로 연결한 니콘 Zf), 없으면 전면 카메라 */
-function constraints(deviceId: string | null): MediaStreamConstraints {
+function constraints(deviceId: string | null, size: MediaTrackConstraints): MediaStreamConstraints {
   return {
-    video: deviceId ? { deviceId: { exact: deviceId }, ...SIZE } : { facingMode: "user", ...SIZE },
+    video: deviceId ? { deviceId: { exact: deviceId }, ...size } : { facingMode: "user", ...size },
     audio: false,
   };
+}
+
+/**
+ * 비디오에 실제 화면이 들어올 때까지 기다린다. 시간 안에 오지 않으면 false.
+ * play()의 Promise는 Safari·Chrome 모두 화면이 오지 않으면 끝나지 않을 수 있어 그것에 기대지 않는다.
+ */
+function waitForFrame(video: HTMLVideoElement, timeout: number, isCancelled: () => boolean): Promise<boolean> {
+  return new Promise((resolve) => {
+    const ready = () => video.videoWidth > 0 && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA;
+    const events = ["loadeddata", "resize", "playing"] as const;
+    function finish(ok: boolean) {
+      clearInterval(poll);
+      clearTimeout(timer);
+      events.forEach((e) => video.removeEventListener(e, check));
+      resolve(ok);
+    }
+    function check() {
+      if (isCancelled()) finish(false);
+      else if (ready()) finish(true);
+    }
+    events.forEach((e) => video.addEventListener(e, check));
+    const poll = setInterval(check, 200);
+    const timer = setTimeout(() => finish(ready()), timeout);
+    check();
+  });
 }
 
 /** 화면에 보이는 카메라 문구 (언어별) */
@@ -94,28 +131,52 @@ export function useCamera(deviceId: string | null, text: CameraMessages) {
         setMode("file");
         return;
       }
-      try {
-        let stream: MediaStream;
+      // 고른 카메라가 빠졌으면 기본 카메라로. 권한 거부는 그대로 실패 처리한다.
+      let useId = deviceId;
+      const open = async (size: MediaTrackConstraints) => {
         try {
-          stream = await navigator.mediaDevices.getUserMedia(constraints(deviceId));
+          return await navigator.mediaDevices.getUserMedia(constraints(useId, size));
         } catch (err) {
-          // 고른 카메라가 빠졌으면 기본 카메라로. 권한 거부는 그대로 실패 처리한다.
-          if (!deviceId || (err instanceof DOMException && err.name === "NotAllowedError")) throw err;
-          stream = await navigator.mediaDevices.getUserMedia(constraints(null));
+          if (!useId || (err instanceof DOMException && err.name === "NotAllowedError")) throw err;
+          useId = null;
+          return navigator.mediaDevices.getUserMedia(constraints(null, size));
         }
-        if (cancelled) {
-          stream.getTracks().forEach((t) => t.stop());
+      };
+      try {
+        let stream: MediaStream | null = null;
+        for (const size of SIZES) {
+          const next = await open(size);
+          if (cancelled) {
+            next.getTracks().forEach((t) => t.stop());
+            return;
+          }
+          if (!videoEl) {
+            stream = next;
+            break;
+          }
+          videoEl.srcObject = next;
+          // 재생 요청의 결과는 기다리지 않는다 (화면이 오면 waitForFrame이 알아챈다).
+          videoEl.play().catch(() => {});
+          if (await waitForFrame(videoEl, FIRST_FRAME_TIMEOUT, () => cancelled)) {
+            stream = next;
+            break;
+          }
+          // 카메라는 열렸지만 화면이 오지 않는다: 닫고 다음 크기로 다시 연다.
+          next.getTracks().forEach((t) => t.stop());
+          videoEl.srcObject = null;
+          if (cancelled) return;
+        }
+        if (!stream) {
+          setMode("stalled");
+          void listCameras(textRef.current).then((list) => {
+            if (!cancelled) setDevices(list);
+          });
           return;
         }
         streamRef.current = stream;
         // 카메라를 뽑거나 카메라가 스스로 꺼지면 다시 연결한다 (고른 카메라가 없으면 기본 카메라로).
         endedTrack = stream.getVideoTracks()[0] ?? null;
         endedTrack?.addEventListener("ended", onEnded);
-        if (videoEl) {
-          videoEl.srcObject = stream;
-          await videoEl.play().catch(() => {});
-        }
-        if (cancelled) return;
         setMode("live");
         setActiveId(stream.getVideoTracks()[0]?.getSettings().deviceId ?? null);
         // 권한을 받은 뒤에야 카메라 이름이 보인다.

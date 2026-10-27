@@ -9,6 +9,12 @@ const capture: Messages["capture"] = {
   cameraSelect: "摄像头",
   recording: "录制中",
   preparing: "正在准备摄像头…",
+  /** 카메라는 열렸지만 화면이 오지 않을 때 (USB 카메라 등) */
+  stalled: {
+    title: "收不到摄像头画面",
+    body: "摄像头已连接，但没有传来画面。请打开相机的网络摄像头（UVC）模式并重新插拔数据线，或在上方选择其他摄像头。",
+    retry: "重新连接",
+  },
   fileMode: {
     title: "无法使用实时摄像头",
     body: "点击按钮会打开 iPad 相机，请逐张拍摄。",

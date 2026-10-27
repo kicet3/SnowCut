@@ -9,6 +9,12 @@ const capture: Messages["capture"] = {
   cameraSelect: "Camera",
   recording: "Recording",
   preparing: "Getting camera ready…",
+  /** 카메라는 열렸지만 화면이 오지 않을 때 (USB 카메라 등) */
+  stalled: {
+    title: "No picture from the camera",
+    body: "The camera is connected but isn't sending a picture. Turn on the camera's webcam (UVC) mode and reconnect the cable, or pick another camera above.",
+    retry: "Reconnect",
+  },
   fileMode: {
     title: "Live camera isn't available",
     body: "Tap the button to open the iPad camera. Take one photo at a time.",

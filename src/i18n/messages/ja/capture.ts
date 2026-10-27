@@ -9,6 +9,12 @@ const capture: Messages["capture"] = {
   cameraSelect: "カメラ",
   recording: "録画中",
   preparing: "カメラを準備中…",
+  /** 카메라는 열렸지만 화면이 오지 않을 때 (USB 카메라 등) */
+  stalled: {
+    title: "カメラの映像が届きません",
+    body: "カメラは接続されていますが、映像が届いていません。カメラのWebカメラ（UVC）モードをオンにしてケーブルを挿し直すか、上で別のカメラを選んでください。",
+    retry: "再接続",
+  },
   fileMode: {
     title: "リアルタイムカメラを使えません",
     body: "ボタンを押すとiPadのカメラが開きます。1枚ずつ撮影してください。",

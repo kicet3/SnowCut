@@ -286,6 +286,15 @@ export function CaptureScreen(props: Props) {
               <strong>{t.preparing}</strong>
             </div>
           )}
+          {mode === "stalled" && (
+            <div className="vf-message">
+              <strong>{t.stalled.title}</strong>
+              <span>{t.stalled.body}</span>
+              <button className="btn" type="button" onClick={restart}>
+                {t.stalled.retry}
+              </button>
+            </div>
+          )}
           {mode === "file" && (
             <div className="vf-message">
               <strong>{t.fileMode.title}</strong>
@@ -313,7 +322,7 @@ export function CaptureScreen(props: Props) {
           id="shootBtn"
           className={`btn big${running ? "" : " primary"}`}
           type="button"
-          disabled={mode === "pending" || decoding}
+          disabled={mode === "pending" || mode === "stalled" || decoding}
           onPointerDown={unlockSound}
           onClick={onShootClick}
         >
