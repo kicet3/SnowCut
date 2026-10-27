@@ -64,6 +64,7 @@ export function Booth() {
         layout={state.layout}
         frame={state.frame}
         showDate={state.showDate}
+        caption={state.caption}
         shots={state.shots}
         revision={state.revision}
         capturedAt={state.capturedAt}
@@ -75,6 +76,7 @@ export function Booth() {
         onFrame={(frame) => dispatch({ type: "frame", frame })}
         onLayout={(layout) => dispatch({ type: "layout", layout })}
         onShowDate={(showDate) => dispatch({ type: "showDate", showDate })}
+        onCaption={(caption) => dispatch({ type: "caption", caption })}
         onRetake={(index) => dispatch({ type: "retake", index })}
         step={resultStep}
         onStep={setResultStep}
@@ -123,6 +125,7 @@ export function Booth() {
           shots={state.shots}
           filter={state.screen === "result" ? state.filter : undefined}
           date={state.screen === "result" && state.showDate ? state.capturedAt : null}
+          caption={state.screen === "result" ? state.caption : ""}
           characters={state.characters}
           onLayout={(layout) => dispatch({ type: "layout", layout })}
           onChange={(characters) => dispatch({ type: "characters", characters })}

@@ -12,6 +12,8 @@ export interface BoothState {
   timer: number;
   frame: FrameId;
   showDate: boolean;
+  /** 사진 아래 문구 (기본은 비어 있음) */
+  caption: string;
   shots: (Shot | null)[];
   /** 다시 찍기를 취소하면 되돌릴 원래 사진 */
   pendingRetake: { index: number; shot: Shot } | null;
@@ -33,6 +35,7 @@ export type Action =
   | { type: "timer"; timer: number }
   | { type: "frame"; frame: FrameId }
   | { type: "showDate"; showDate: boolean }
+  | { type: "caption"; caption: string }
   | { type: "start" }
   | { type: "shot"; index: number; shot: Shot }
   | { type: "retake"; index: number }
@@ -50,7 +53,8 @@ export const initialState: BoothState = {
   layout: "strip",
   timer: 5,
   frame: DEFAULT_FRAME,
-  showDate: true,
+  showDate: false,
+  caption: "",
   shots: emptyShots("strip"),
   pendingRetake: null,
   revision: 0,
@@ -79,6 +83,8 @@ export function reducer(state: BoothState, action: Action): BoothState {
       return { ...state, frame: action.frame };
     case "showDate":
       return { ...state, showDate: action.showDate };
+    case "caption":
+      return { ...state, caption: action.caption };
     case "start":
       return {
         ...state,

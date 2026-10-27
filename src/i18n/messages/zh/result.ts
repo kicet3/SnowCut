@@ -12,6 +12,8 @@ const result: Messages["result"] = {
   frameCategoriesLabel: "相框类别",
   filterNote: "滤镜只作用于照片格。",
   options: {
+    caption: "文字",
+    captionPlaceholder: "照片下方的文字（留空则不显示）",
     showDate: "显示日期",
     characters: "自定义角色",
     characterCount: (n: number) => `${n} 个`,
@@ -40,7 +42,13 @@ const result: Messages["result"] = {
       borderless: "无边框",
       after: "。",
     },
-    printerNote: "作者使用佳能 SELPHY CP1500 打印。如果使用普通打印机，请放入明信片尺寸的光面相纸。",
+    printerNote: "作者使用佳能 SELPHY CP1500 打印。使用普通打印机时，请选择“带边距”，并使用明信片尺寸的光面相纸。",
+    /** 인쇄 방식 고르기 */
+    mode: { label: "打印方式", borderless: "佳能 SELPHY CP1500", margin: "带边距（普通打印机）" },
+    /** 여백 포함 인쇄 안내 */
+    marginGuide: "请在打印窗口中将纸张设为明信片（100×148mm），边距设为“无”，缩放设为 100%（默认）。照片四周会留出白边，普通打印机也不会裁掉边缘。",
+    /** 테두리 없는 인쇄(SELPHY CP1500) Windows 설정 안내 */
+    windowsTip: "在 Windows 上，请将打印机选为 Canon SELPHY CP1500，并在“更多设置”中将边距设为“无”、缩放设为“默认”。照片位于打印机会裁掉的边缘以内。",
     twoPerSheet: "一张纸会印出两条，请沿中间的标记裁开。",
   },
   video: {

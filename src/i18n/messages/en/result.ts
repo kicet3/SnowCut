@@ -12,6 +12,8 @@ const result: Messages["result"] = {
   frameCategoriesLabel: "Frame categories",
   filterNote: "Filters apply only to the photos, not the frame.",
   options: {
+    caption: "Caption",
+    captionPlaceholder: "Text under the photos (leave empty for none)",
     showDate: "Show date",
     characters: "Custom characters",
     characterCount: (n: number) => `${n}`,
@@ -40,7 +42,13 @@ const result: Messages["result"] = {
       borderless: "Borderless",
       after: ".",
     },
-    printerNote: "The creator prints with a Canon SELPHY CP1500. If you use a regular printer, load glossy postcard-size photo paper.",
+    printerNote: "The creator prints with a Canon SELPHY CP1500. With a regular printer, choose “With margins” and use glossy postcard-size photo paper.",
+    /** 인쇄 방식 고르기 */
+    mode: { label: "Print style", borderless: "Canon SELPHY CP1500", margin: "With margins (regular printer)" },
+    /** 여백 포함 인쇄 안내 */
+    marginGuide: "In the print dialog, choose Postcard (100×148 mm) paper, Margins: None, and Scale: 100% (default). A white border around the photo keeps regular printers from cutting off the edges.",
+    /** 테두리 없는 인쇄(SELPHY CP1500) Windows 설정 안내 */
+    windowsTip: "On Windows, choose Canon SELPHY CP1500 as the printer and, under More settings, set Margins to None and Scale to Default. The photo sits inside the edge the printer trims off.",
     twoPerSheet: " Each sheet holds two strips, so cut along the center mark.",
   },
   video: {

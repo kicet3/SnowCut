@@ -12,6 +12,8 @@ const result: Messages["result"] = {
   frameCategoriesLabel: "フレームの種類",
   filterNote: "フィルターは写真部分だけに適用されます。",
   options: {
+    caption: "文字",
+    captionPlaceholder: "写真の下に入れる文字（空欄なら入れません）",
     showDate: "日付を表示",
     characters: "カスタムキャラクター",
     characterCount: (n: number) => `${n}個`,
@@ -40,7 +42,13 @@ const result: Messages["result"] = {
       borderless: "フチなし",
       after: "を選んでください。",
     },
-    printerNote: "制作者はCanon SELPHY CP1500で印刷しています。一般的なプリンターを使う場合は、はがきサイズの光沢紙をセットしてください。",
+    printerNote: "制作者はCanon SELPHY CP1500で印刷しています。一般的なプリンターでは「余白あり」を選び、はがきサイズの光沢紙に印刷してください。",
+    /** 인쇄 방식 고르기 */
+    mode: { label: "印刷方法", borderless: "Canon SELPHY CP1500", margin: "余白あり（一般のプリンター）" },
+    /** 여백 포함 인쇄 안내 */
+    marginGuide: "印刷画面で用紙ははがき（100×148mm）、余白はなし、倍率は100%（既定）を選んでください。写真の周りに白い余白を残すので、一般的なプリンターでも端が切れません。",
+    /** 테두리 없는 인쇄(SELPHY CP1500) Windows 설정 안내 */
+    windowsTip: "Windowsでは、プリンターにCanon SELPHY CP1500を選び、「詳細設定」で余白を「なし」、倍率を「既定」にしてください。写真はプリンターが切り落とす端より内側に配置されています。",
     twoPerSheet: "1枚に2つずつ印刷されるので、中央の目印に沿って切ってください。",
   },
   video: {

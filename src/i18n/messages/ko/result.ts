@@ -10,6 +10,8 @@ const result = {
   frameCategoriesLabel: "프레임 종류",
   filterNote: "필터는 사진 칸에만 적용돼요.",
   options: {
+    caption: "문구",
+    captionPlaceholder: "사진 아래에 넣을 문구 (비워 두면 없음)",
     showDate: "날짜 표시",
     characters: "커스텀 캐릭터",
     characterCount: (n: number) => `${n}개`,
@@ -38,7 +40,13 @@ const result = {
       borderless: "테두리 없음",
       after: "을 고르세요.",
     },
-    printerNote: "제작자는 캐논 SELPHY CP1500으로 인쇄해요. 일반 프린터를 쓴다면 엽서 크기의 광택 인화지를 넣어 인쇄하세요.",
+    printerNote: "제작자는 캐논 SELPHY CP1500으로 인쇄해요. 일반 프린터라면 '여백 포함'을 고르고 엽서 크기의 광택 인화지에 인쇄하세요.",
+    /** 인쇄 방식 고르기 */
+    mode: { label: "인쇄 방식", borderless: "캐논 SELPHY CP1500", margin: "여백 포함 (일반 프린터)" },
+    /** 여백 포함 인쇄 안내 */
+    marginGuide: "인쇄 창에서 용지 엽서(100×148mm), 여백 없음, 배율 100%(기본값)를 고르세요. 사진 둘레에 흰 여백을 두어 일반 프린터에서도 가장자리가 잘리지 않아요.",
+    /** 테두리 없는 인쇄(SELPHY CP1500) Windows 설정 안내 */
+    windowsTip: "Windows에서는 프린터를 Canon SELPHY CP1500으로 고르고, '설정 더보기'에서 여백은 '없음', 배율은 '기본값'으로 두세요. 사진은 프린터가 잘라 내는 가장자리보다 안쪽에 놓여 있어요.",
     twoPerSheet: " 한 장에 두 개씩 나오니 가운데 표시를 따라 잘라 주세요.",
   },
   video: {

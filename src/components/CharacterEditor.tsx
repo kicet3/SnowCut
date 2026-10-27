@@ -18,7 +18,7 @@ import {
   trimTransparent,
   type Character,
 } from "@/lib/character";
-import { CAPTION, LAYOUTS, type LayoutKey } from "@/lib/frame";
+import { LAYOUTS, type LayoutKey } from "@/lib/frame";
 import type { FrameId } from "@/lib/frames";
 import { filterShot } from "@/lib/look/apply";
 import type { FilterId } from "@/lib/look/presets";
@@ -35,6 +35,8 @@ interface Props {
   /** 결과 화면에서 열면 실제 합성과 같게 필터·날짜까지 보여 준다 */
   filter?: FilterId;
   date?: Date | null;
+  /** 사진 아래 문구 */
+  caption?: string;
   characters: Character[];
   onLayout: (layout: LayoutKey) => void;
   onChange: (characters: Character[]) => void;
@@ -152,7 +154,7 @@ type Gesture =
   | { kind: "pinch"; id: number; dist: number; angle: number; size: number; rotation: number };
 
 export function CharacterEditor(props: Props) {
-  const { layout, layouts, frame, shots, filter, date, onLayout, onChange, onClose } = props;
+  const { layout, layouts, frame, shots, filter, date, caption = "", onLayout, onChange, onClose } = props;
   const { m } = useI18n();
   const t = m.editor;
   // 끄는 동안(드래그·핀치)에는 여기서만 바꾸고, 손을 떼면 Booth에 알린다.
@@ -214,7 +216,7 @@ export function CharacterEditor(props: Props) {
           layout,
           frame,
           shots,
-          caption: CAPTION,
+          caption,
           date: date ?? null,
           titleFont: cssVar("--font-print"),
           dateFont: cssVar("--font-body"),
@@ -240,7 +242,7 @@ export function CharacterEditor(props: Props) {
       ctx.restore();
     });
     return () => cancelAnimationFrame(raf);
-  }, [layout, frame, shots, filter, date, list, selected, cutout, W, H]);
+  }, [layout, frame, shots, filter, date, caption, list, selected, cutout, W, H]);
 
   // ---------- 배치: 끌어서 옮기고, 두 손가락으로 크기·회전 ----------
 

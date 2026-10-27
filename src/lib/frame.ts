@@ -68,7 +68,7 @@ function hero(W: number, H: number, m: number, g: number, footer: number) {
 }
 
 export const LAYOUTS: Record<LayoutKey, LayoutSpec> = {
-  strip: { title: "세로 4컷", paper: "2×6인치", canvas: { width: 1200, height: 3600 }, count: 4, ...column(1200, 3600, 4, 60, 40, 260) },
+  strip: { title: "세로 4컷", paper: "2×6인치", canvas: { width: 1200, height: 3600 }, count: 4, ...column(1200, 3600, 4, 60, 40, 420) },
   grid: { title: "2×2 그리드", paper: "4×6인치", canvas: { width: 2400, height: 3600 }, count: 4, ...matrix(2400, 3600, 2, 2, 80, 40, 520) },
   strip3: { title: "세로 3컷", paper: "2×6인치", canvas: { width: 1200, height: 3600 }, count: 3, ...column(1200, 3600, 3, 60, 40, 260) },
   grid6: { title: "2×3 6컷", paper: "4×6인치", canvas: { width: 2400, height: 3600 }, count: 6, ...matrix(2400, 3600, 2, 3, 80, 30, 480) },
@@ -101,8 +101,8 @@ export function photoAspect(key: LayoutKey, index = 0): number {
 }
 
 export const TIMERS = [3, 5, 10] as const;
-/** 사진 아래(가로 4컷은 오른쪽) 문구. 비워 두어 문구 없이 날짜만 넣는다. */
-export const CAPTION = "";
+/** 사진 아래(가로 4컷은 오른쪽)에 넣을 수 있는 문구의 최대 글자 수. 문구는 결과 화면에서 입력한다 (기본은 비어 있음). */
+export const CAPTION_MAX = 24;
 
 const pad = (n: number) => String(n).padStart(2, "0");
 

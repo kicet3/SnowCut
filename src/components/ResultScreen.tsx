@@ -3,12 +3,12 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { canvasToJpeg, drawComposite, drawCover, type Shot } from "@/lib/canvas";
 import type { Character } from "@/lib/character";
-import { CAPTION, LAYOUTS, compatibleLayouts, fileNameFor, photoAspect, type LayoutKey } from "@/lib/frame";
+import { CAPTION_MAX, LAYOUTS, compatibleLayouts, fileNameFor, photoAspect, type LayoutKey } from "@/lib/frame";
 import { FRAMES, FRAME_CATEGORIES, frameDesign, type FrameCategory, type FrameId } from "@/lib/frames";
 import { useI18n } from "@/i18n/I18nProvider";
 import { filterShot } from "@/lib/look/apply";
 import { FILTERS, type FilterId } from "@/lib/look/presets";
-import { drawPrintSheet, pagesFor, printCounts, sheetPlan } from "@/lib/print";
+import { PRINT_BLEED_MM, drawPrintSheet, marginFit, pagesFor, printCounts, sheetPlan, type PrintMode } from "@/lib/print";
 import { videoExtension } from "@/lib/recorder";
 import { downloadBlob, downloadImage, saveImage, type SaveOutcome } from "@/lib/saveImage";
 import { CHARACTER_ENABLED } from "@/lib/site";
@@ -18,6 +18,8 @@ interface Props {
   layout: LayoutKey;
   frame: FrameId;
   showDate: boolean;
+  /** 사진 아래 문구 */
+  caption: string;
   shots: (Shot | null)[];
   /** 촬영본이 바뀔 때마다 증가하는 값 */
   revision: number;
@@ -32,6 +34,7 @@ interface Props {
   onFrame: (frame: FrameId) => void;
   onFilter: (filter: FilterId) => void;
   onShowDate: (show: boolean) => void;
+  onCaption: (caption: string) => void;
   onRetake: (index: number) => void;
   onNew: () => void;
   /** 꾸미기 단계. 다시 찍고 돌아와도 이어지도록 Booth가 들고 있다. */
@@ -50,6 +53,8 @@ export type ResultStep = "frame" | "filter" | "text" | "save";
 const STEPS: ResultStep[] = ["frame", "filter", "text", "save"];
 
 const NO_STATUS: SaveOutcome = { kind: "none", message: "" };
+/** 고른 인쇄 방식 (테두리 없음 / 여백 포함) */
+const PRINT_MODE_KEY = "snowcut.printMode";
 
 function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -63,11 +68,12 @@ function FrameCard(props: {
   shots: (Shot | null)[];
   revision: number;
   date: Date | null;
+  caption: string;
   characters: Character[];
   selected: boolean;
   onPick: () => void;
 }) {
-  const { frame, name, layout, shots, revision, date, characters, selected, onPick } = props;
+  const { frame, name, layout, shots, revision, date, caption, characters, selected, onPick } = props;
   const ref = useRef<HTMLCanvasElement>(null);
   const time = date?.getTime() ?? 0;
   useEffect(() => {
@@ -81,7 +87,7 @@ function FrameCard(props: {
         layout,
         frame,
         shots,
-        caption: CAPTION,
+        caption,
         date: time ? new Date(time) : null,
         titleFont: cssVar("--font-print"),
         dateFont: cssVar("--font-body"),
@@ -91,7 +97,7 @@ function FrameCard(props: {
     } catch {}
     // shots는 revision이 바뀔 때만 달라진다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [frame, layout, revision, time, characters]);
+  }, [frame, layout, revision, time, caption, characters]);
   return (
     <button type="button" className="pick-card" data-frame={frame} aria-pressed={selected} onClick={onPick}>
       <span
@@ -142,12 +148,12 @@ function FilterCard(props: {
 }
 
 export function ResultScreen(props: Props) {
-  const { layout, frame, showDate, shots, revision, capturedAt, filter, video, characters } = props;
+  const { layout, frame, showDate, caption, shots, revision, capturedAt, filter, video, characters } = props;
   const { m } = useI18n();
   const t = m.result;
   // 캐릭터는 바꿀 때마다 새 배열이 오므로 배치 값으로 비교한다.
   const characterKey = characters.map((c) => `${c.id}:${c.x},${c.y},${c.size},${c.rotation},${+c.flip},${+c.outline}`).join(";");
-  const key = `${layout}|${frame}|${showDate}|${revision}|${capturedAt.getTime()}|${filter}|${characterKey}`;
+  const key = `${layout}|${frame}|${showDate}|${caption}|${revision}|${capturedAt.getTime()}|${filter}|${characterKey}`;
   const [rendered, setRendered] = useState<Rendered | null>(null);
   const [status, setStatus] = useState<SaveOutcome>(NO_STATUS);
   const [saving, setSaving] = useState(false);
@@ -170,7 +176,7 @@ export function ResultScreen(props: Props) {
       // 한글 웹폰트는 글자 범위별로 나뉘어 있어서, 실제로 그릴 글자를 넘겨야 해당 조각을 받아 온다.
       try {
         await Promise.all([
-          document.fonts.load(`80px ${titleFont}`, CAPTION),
+          caption.trim() ? document.fonts.load(`80px ${titleFont}`, caption) : Promise.resolve(),
           document.fonts.load(`600 40px ${dateFont}`, "0123456789."),
         ]);
       } catch {}
@@ -183,7 +189,7 @@ export function ResultScreen(props: Props) {
           layout,
           frame,
           shots,
-          caption: CAPTION,
+          caption,
           date: showDate ? capturedAt : null,
           titleFont,
           dateFont,
@@ -273,6 +279,20 @@ export function ResultScreen(props: Props) {
     if (video) setStatus(downloadBlob(video, videoName, t.save));
   };
 
+  // 인쇄 방식은 기억해 둔다. 기본은 캐논 SELPHY CP1500 기준(테두리 없음).
+  const [printMode, setPrintModeState] = useState<PrintMode>(() => {
+    try {
+      const saved = localStorage.getItem(PRINT_MODE_KEY);
+      if (saved === "borderless" || saved === "margin") return saved;
+    } catch {}
+    return "borderless";
+  });
+  const setPrintMode = (mode: PrintMode) => {
+    setPrintModeState(mode);
+    try {
+      localStorage.setItem(PRINT_MODE_KEY, mode);
+    } catch {}
+  };
   // 인쇄용 시트(엽서 100×148mm)는 저장 단계에 있을 때만 만든다. 큰 캔버스라 다 만들면 바로 비운다.
   const [sheet, setSheet] = useState<{ url: string; key: string } | null>(null);
   // 화면에 보이는 완성 사진(rendered)에서 바로 만든다. 합성 캔버스는 다음 설정으로 다시 그리는 중일 수 있어서 쓰지 않는다.
@@ -289,7 +309,8 @@ export function ResultScreen(props: Props) {
         img.src = renderedUrl;
         await img.decode();
         if (cancelled) return;
-        drawPrintSheet(canvas, img, layout);
+        // 테두리 없는 인쇄는 프린터가 잘라 내는 가장자리만큼 사진을 안쪽에 둔다. 여백 포함 인쇄는 흰 여백이 대신한다.
+        drawPrintSheet(canvas, img, layout, printMode === "borderless" ? PRINT_BLEED_MM : 0);
         blob = await canvasToJpeg(canvas, 0.97);
       } catch {
       } finally {
@@ -307,7 +328,7 @@ export function ResultScreen(props: Props) {
     };
     // renderedUrl이 바뀌면 key도 지금 값이다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, renderedUrl]);
+  }, [step, renderedUrl, printMode]);
   const printReady = !!sheet && sheet.key === key;
   const counts = printCounts(layout);
   // 레이아웃을 바꾸면 단위(1장/2개)가 달라지므로 가장 가까운 선택지로 맞춘다.
@@ -317,6 +338,11 @@ export function ResultScreen(props: Props) {
     : (counts.find((c) => c >= printCount) ?? counts[counts.length - 1]);
   const pages = pagesFor(layout, count);
   const perSheet = sheetPlan(layout).copies;
+  const fit = marginFit();
+  const sheetStyle: CSSProperties | undefined =
+    printMode === "margin"
+      ? { width: `${fit.w}mm`, height: `${fit.h}mm`, padding: `${fit.padY}mm ${fit.padX}mm`, boxSizing: "content-box", background: "#fff" }
+      : undefined;
 
   const onPrint = () => {
     if (!printReady) return;
@@ -432,6 +458,7 @@ export function ResultScreen(props: Props) {
                     shots={shots}
                     revision={revision}
                     date={date}
+                    caption={caption}
                     characters={characters}
                     selected={frame === f.id}
                     onPick={() => change(props.onFrame)(f.id)}
@@ -463,6 +490,24 @@ export function ResultScreen(props: Props) {
 
           {step === "text" && (
             <>
+              <label className="field" htmlFor="captionInput">
+                <span className="field-label-row">
+                  <b>{t.options.caption}</b>
+                  <small>
+                    {caption.length}/{CAPTION_MAX}
+                  </small>
+                </span>
+                <input
+                  id="captionInput"
+                  className="text-input"
+                  type="text"
+                  value={caption}
+                  maxLength={CAPTION_MAX}
+                  placeholder={t.options.captionPlaceholder}
+                  enterKeyHint="done"
+                  onChange={(e) => change(props.onCaption)(e.target.value)}
+                />
+              </label>
               <label className="toggle" htmlFor="dateToggle">
                 <b>{t.options.showDate}</b>
                 <input
@@ -558,14 +603,28 @@ export function ResultScreen(props: Props) {
                     {t.print.printFile}
                   </button>
                 </div>
+                <div className="seg print-mode" role="group" aria-label={t.print.mode.label}>
+                  {(["borderless", "margin"] as const).map((mode) => (
+                    <button key={mode} type="button" aria-pressed={printMode === mode} onClick={() => setPrintMode(mode)}>
+                      {t.print.mode[mode]}
+                    </button>
+                  ))}
+                </div>
                 <p className="kiosk-note">
-                  {t.print.guide.beforePaper}
-                  <b>{t.print.guide.paper}</b>
-                  {t.print.guide.beforeBorderless}
-                  <b>{t.print.guide.borderless}</b>
-                  {t.print.guide.after}
+                  {printMode === "margin" ? (
+                    t.print.marginGuide
+                  ) : (
+                    <>
+                      {t.print.guide.beforePaper}
+                      <b>{t.print.guide.paper}</b>
+                      {t.print.guide.beforeBorderless}
+                      <b>{t.print.guide.borderless}</b>
+                      {t.print.guide.after}
+                    </>
+                  )}
                   {perSheet === 2 && t.print.twoPerSheet}
                 </p>
+                {printMode === "borderless" && <p className="kiosk-note">{t.print.windowsTip}</p>}
                 <p className="kiosk-note">{t.print.printerNote}</p>
               </div>
               <p className={`status${status.kind === "none" ? "" : " " + status.kind}`} role="status">
@@ -632,7 +691,7 @@ export function ResultScreen(props: Props) {
         <div id="print-sheet" aria-hidden>
           {Array.from({ length: pages }, (_, i) => (
             // eslint-disable-next-line @next/next/no-img-element
-            <img key={i} src={sheet.url} alt="" />
+            <img key={i} src={sheet.url} alt="" style={sheetStyle} />
           ))}
         </div>
       )}
