@@ -10,6 +10,7 @@ export type CameraMode = "pending" | "live" | "file" | "stalled";
 
 /**
  * 요청할 화면 크기. 앞에서부터 시도한다.
+ * 목록에서 고른 카메라(USB 카메라 등)는 먼저 카메라의 원래 해상도로 열어 본다 (NATIVE). 미리보기는 화면 크기에 맞춰 확대·축소된다.
  * USB 카메라(니콘 Zf 등)는 16:9만 내보내는 경우가 많고, Safari는 맞지 않는 크기를 요청하면
  * 카메라를 연 채로 화면을 한 장도 보내지 않을 때가 있어 16:9 → 카메라 기본값 순으로 낮춘다.
  */
@@ -27,6 +28,15 @@ const LETTERBOX_INTERVAL = 700;
 
 /** 연결 뒤 첫 화면을 기다리는 시간 (ms). 넘으면 다음 크기로 다시 연결한다. */
 export const FIRST_FRAME_TIMEOUT = 4000;
+/** 카메라의 원래 해상도로 연다 (크기를 정하지 않고 열어 최대 해상도를 확인한 뒤 맞춘다). */
+const NATIVE = "native";
+/** 원래 해상도로 연 카메라는 첫 화면까지 조금 더 기다린다 (ms). USB 카메라는 켜지는 데 시간이 걸린다. */
+const NATIVE_FIRST_FRAME_TIMEOUT = 10000;
+/**
+ * 마지막 시도에서는 안내를 띄운 뒤에도 카메라를 닫지 않고 이만큼 더 기다린다 (ms).
+ * 아이패드에 연결한 니콘 Zf처럼 첫 화면까지 오래 걸리는 USB 카메라가 있어, 늦게라도 화면이 오면 바로 쓴다.
+ */
+const LATE_FRAME_TIMEOUT = 60000;
 
 /** deviceId가 있으면 그 카메라(예: USB로 연결한 니콘 Zf), 없으면 전면 카메라 */
 function constraints(deviceId: string | null, size: MediaTrackConstraints): MediaStreamConstraints {
@@ -159,17 +169,37 @@ export function useCamera(deviceId: string | null, text: CameraMessages) {
           return await navigator.mediaDevices.getUserMedia(constraints(useId, size));
         } catch (err) {
           if (!useId || (err instanceof DOMException && err.name === "NotAllowedError")) throw err;
+          log(`고른 카메라 실패 (${err instanceof DOMException ? err.name : String(err)}) → 기본 카메라`);
           useId = null;
           return navigator.mediaDevices.getUserMedia(constraints(null, size));
         }
       };
+      // 고른 카메라: 원래 해상도 → 4:3 → 16:9, 기본 카메라: 4:3 → 16:9 → 카메라 기본값
+      const attempts: (MediaTrackConstraints | typeof NATIVE)[] = deviceId ? [NATIVE, SIZES[0], SIZES[1]] : SIZES;
       try {
         let stream: MediaStream | null = null;
-        for (const size of SIZES) {
-          log(`요청 ${JSON.stringify(size)}`);
-          const next = await open(size);
-          const st = next.getVideoTracks()[0]?.getSettings();
-          log(`열림 ${st?.width}x${st?.height} ${st?.frameRate ?? "?"}fps muted=${next.getVideoTracks()[0]?.muted}`);
+        for (const [i, attempt] of attempts.entries()) {
+          const last = i === attempts.length - 1;
+          const native = attempt === NATIVE;
+          log(`요청 ${native ? "원래 해상도" : JSON.stringify(attempt)}`);
+          const next = await open(native ? {} : attempt);
+          const track = next.getVideoTracks()[0];
+          const cap = track?.getCapabilities?.();
+          const maxW = cap?.width?.max;
+          const maxH = cap?.height?.max;
+          if (native && track && maxW && maxH) {
+            // 크기를 정하지 않으면 브라우저 기본값(640×480 등)으로 열리므로 카메라 최대 해상도로 맞춘다.
+            await track.applyConstraints({ width: { ideal: maxW }, height: { ideal: maxH } }).catch((e) => {
+              log(`해상도 맞추기 실패 ${e instanceof DOMException ? e.name : String(e)}`);
+            });
+          }
+          const st = track?.getSettings();
+          log(
+            `열림 ${track?.label ?? "?"} ${st?.width}x${st?.height} ${st?.frameRate ?? "?"}fps muted=${track?.muted}` +
+              (maxW ? ` (최대 ${maxW}x${maxH})` : ""),
+          );
+          track?.addEventListener("mute", () => log("트랙 mute"));
+          track?.addEventListener("unmute", () => log("트랙 unmute"));
           if (cancelled) {
             next.getTracks().forEach((t) => t.stop());
             return;
@@ -180,20 +210,35 @@ export function useCamera(deviceId: string | null, text: CameraMessages) {
           }
           videoEl.srcObject = next;
           // 재생 요청의 결과는 기다리지 않는다 (화면이 오면 waitForFrame이 알아챈다).
-          videoEl.play().catch(() => {});
-          if (await waitForFrame(videoEl, FIRST_FRAME_TIMEOUT, () => cancelled)) {
+          videoEl.play().catch((e) => log(`play 거부 ${e instanceof DOMException ? e.name : String(e)}`));
+          if (await waitForFrame(videoEl, native ? NATIVE_FIRST_FRAME_TIMEOUT : FIRST_FRAME_TIMEOUT, () => cancelled)) {
             log(`첫 화면 ${videoEl.videoWidth}x${videoEl.videoHeight}`);
             stream = next;
             break;
           }
-          log(`화면 없음 (readyState ${videoEl.readyState}, ${videoEl.videoWidth}x${videoEl.videoHeight})`);
+          log(
+            `화면 없음 (readyState ${videoEl.readyState}, paused ${videoEl.paused}, track ${track?.readyState} muted=${track?.muted})`,
+          );
+          if (last && !cancelled) {
+            // 안내는 띄우되 카메라는 열어 둔 채 더 기다린다. 화면이 오면 그대로 이어서 쓴다.
+            log("안내 표시, 계속 기다리는 중");
+            setMode("stalled");
+            void listCameras(textRef.current).then((list) => {
+              if (!cancelled) setDevices(list);
+            });
+            if (await waitForFrame(videoEl, LATE_FRAME_TIMEOUT, () => cancelled)) {
+              log(`늦게 첫 화면 ${videoEl.videoWidth}x${videoEl.videoHeight}`);
+              stream = next;
+              break;
+            }
+            log("끝내 화면 없음");
+          }
           // 카메라는 열렸지만 화면이 오지 않는다: 닫고 다음 크기로 다시 연다.
           next.getTracks().forEach((t) => t.stop());
           videoEl.srcObject = null;
           if (cancelled) return;
         }
         if (!stream) {
-          log("세 번 모두 화면 없음 → 안내 표시");
           setMode("stalled");
           void listCameras(textRef.current).then((list) => {
             if (!cancelled) setDevices(list);

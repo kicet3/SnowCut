@@ -154,7 +154,9 @@ button { cursor: pointer; }
 .camera-debug {
   position: fixed; left: 8px; bottom: 8px; z-index: 50; max-width: min(560px, calc(100vw - 16px)); max-height: 60vh; overflow: auto;
   margin: 0; padding: 10px 12px; border-radius: 10px; background: rgba(0,0,0,.82); color: #9dffb0;
-  font: 12px/1.45 ui-monospace, Menlo, monospace; white-space: pre-wrap; pointer-events: auto;
+  font: 11px/1.4 ui-monospace, Menlo, monospace; white-space: pre-wrap;
+  /* 아래 버튼(다시 연결·카메라 고르기)을 가리지 않도록 터치는 통과시킨다 */
+  pointer-events: none; opacity: .9;
 }
 /* 촬영 순서 표시: 아이패드에서만 화면 오른쪽 위에 보인다 (아래 태블릿 규칙) */
 .vf-counter { display: none; }
