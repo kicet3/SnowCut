@@ -9,23 +9,51 @@
  */
 export const BG_REMOVER_URL = (process.env.NEXT_PUBLIC_BG_REMOVER_URL ?? "").replace(/\/+$/, "");
 
-export class BgRemoverError extends Error {}
+/**
+ * 실패 이유. 화면에서 이 코드를 현재 언어 문구로 바꿔 보여 준다.
+ * detail은 서버(FastAPI)가 보낸 문구라 그대로 보여 주고, status는 그 밖의 오류 응답 상태 코드다.
+ */
+export type BgRemoverErrorCode =
+  | "notConfigured"
+  | "noPoints"
+  | "network"
+  | "tooLarge"
+  | "server"
+  | "status"
+  | "notImage"
+  | "detail"
+  | "prepare"
+  | "notRemoved"
+  | "noSubject";
 
-/** 응답 본문에서 사용자에게 보여 줄 문구를 꺼낸다 (FastAPI는 {"detail": "..."} 형식). */
-export function errorMessage(status: number, body: string): string {
+export class BgRemoverError extends Error {
+  readonly code: BgRemoverErrorCode;
+  readonly detail?: string;
+  readonly status?: number;
+  constructor(code: BgRemoverErrorCode, extra: { detail?: string; status?: number } = {}) {
+    super(extra.detail ?? (extra.status ? `${code} (${extra.status})` : code));
+    this.name = "BgRemoverError";
+    this.code = code;
+    this.detail = extra.detail;
+    this.status = extra.status;
+  }
+}
+
+/** 오류 응답을 BgRemoverError로 바꾼다. 본문에 FastAPI의 {"detail": "..."}가 있으면 그 문구를 담는다. */
+export function responseError(status: number, body: string): BgRemoverError {
   try {
     const detail = (JSON.parse(body) as { detail?: unknown }).detail;
-    if (typeof detail === "string" && detail) return detail;
+    if (typeof detail === "string" && detail) return new BgRemoverError("detail", { detail, status });
   } catch {}
-  if (status === 413) return "이미지가 너무 커요. 더 작은 이미지로 해 주세요.";
-  if (status >= 500) return "누끼 서버에서 오류가 났어요. 잠시 뒤 다시 해 주세요.";
-  return `누끼를 따지 못했어요 (${status}).`;
+  if (status === 413) return new BgRemoverError("tooLarge", { status });
+  if (status >= 500) return new BgRemoverError("server", { status });
+  return new BgRemoverError("status", { status });
 }
 
 /** points: 이미지 픽셀 좌표 [[x, y], ...] (1개 이상). 배경이 투명한 PNG를 돌려준다. */
 export async function removeBackground(image: Blob, points: [number, number][], signal?: AbortSignal): Promise<Blob> {
-  if (!BG_REMOVER_URL) throw new BgRemoverError("누끼 서버가 설정되지 않았어요.");
-  if (!points.length) throw new BgRemoverError("캐릭터 위를 한 번 이상 눌러 주세요.");
+  if (!BG_REMOVER_URL) throw new BgRemoverError("notConfigured");
+  if (!points.length) throw new BgRemoverError("noPoints");
   const form = new FormData();
   form.append("image", image, "character.png");
   form.append("points", JSON.stringify(points));
@@ -34,10 +62,10 @@ export async function removeBackground(image: Blob, points: [number, number][], 
     res = await fetch(`${BG_REMOVER_URL}/background-removal/remove`, { method: "POST", body: form, signal });
   } catch (e) {
     if (signal?.aborted) throw e;
-    throw new BgRemoverError("누끼 서버에 연결하지 못했어요. 서버가 켜져 있는지 확인해 주세요.");
+    throw new BgRemoverError("network");
   }
-  if (!res.ok) throw new BgRemoverError(errorMessage(res.status, await res.text().catch(() => "")));
+  if (!res.ok) throw responseError(res.status, await res.text().catch(() => ""));
   const blob = await res.blob();
-  if (!blob.type.startsWith("image/")) throw new BgRemoverError("누끼 서버가 이미지가 아닌 응답을 보냈어요.");
+  if (!blob.type.startsWith("image/")) throw new BgRemoverError("notImage");
   return blob;
 }

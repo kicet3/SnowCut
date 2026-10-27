@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type CSSProperties } from "react";
 import { useCamera } from "@/hooks/useCamera";
+import { useI18n } from "@/i18n/I18nProvider";
 import { freeShot, shotFromFile, type Shot } from "@/lib/canvas";
 import { photoAspect, type LayoutKey } from "@/lib/frame";
 import { recordCamera, type Recording } from "@/lib/recorder";
@@ -34,9 +35,11 @@ function savedCamera(): string | null {
 
 export function CaptureScreen(props: Props) {
   const { layout, timer, shots, isRetake, onShot, onVideo, onBack, onComplete } = props;
+  const { m } = useI18n();
+  const t = m.capture;
   // 노트북에 USB로 연결한 카메라(니콘 Zf 등 UVC 웹캠)를 고를 수 있다. 고른 카메라는 기억해 둔다.
   const [cameraId, setCameraId] = useState<string | null>(savedCamera);
-  const { videoRef, mode, grabFrame, getStream, devices, activeId, restart } = useCamera(cameraId);
+  const { videoRef, mode, grabFrame, getStream, devices, activeId, restart } = useCamera(cameraId, t.camera);
   const recordingRef = useRef<Recording | null>(null);
   const [recording, setRecording] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -175,7 +178,8 @@ export function CaptureScreen(props: Props) {
         onShot(i, shot);
         filled[i] = true;
       } catch (err) {
-        setError(err instanceof Error ? err.message : "촬영하지 못했어요.");
+        // 화면 멈춤 안내만 그대로 보여 주고, 그 밖의 내부 오류는 번역된 일반 문구로 바꾼다.
+        setError(err instanceof Error && err.message === t.camera.frozen ? err.message : t.errors.shotFailed);
         setRunning(false);
         discardRecording();
         return;
@@ -224,33 +228,33 @@ export function CaptureScreen(props: Props) {
       onShot(index, shot);
       if (shotsRef.current.filter((s) => !s).length <= 1) onComplete();
     } catch {
-      if (mountedRef.current) setError("사진을 불러오지 못했어요. 다시 찍어 주세요.");
+      if (mountedRef.current) setError(t.errors.fileFailed);
     } finally {
       if (mountedRef.current) setDecoding(false);
     }
   };
 
   const shootLabel = running
-    ? "중지"
+    ? t.shoot.stop
     : mode === "file"
-      ? `${nextEmpty + 1}번째 사진 찍기`
+      ? t.shoot.file(nextEmpty + 1)
       : remaining === total
-        ? "촬영 시작"
-        : `남은 ${remaining}장 촬영`;
+        ? t.shoot.start
+        : t.shoot.remaining(remaining);
 
   return (
     <section id="capture" className="screen">
       <div className="bar">
         <div>
           <button id="backBtn" className="btn ghost" type="button" disabled={running || decoding} onClick={onBack}>
-            {isRetake ? "← 결과로 돌아가기" : "← 처음으로"}
+            {isRetake ? t.backToResult : t.back}
           </button>
         </div>
-        <div className="counter">{nextEmpty === -1 ? "촬영 완료" : `${nextEmpty + 1} / ${total}`}</div>
+        <div className="counter">{nextEmpty === -1 ? t.done : t.progress(nextEmpty + 1, total)}</div>
         <div>
           {devices.length > 1 && (
             <label className="camera-select">
-              <span className="sr-only">카메라</span>
+              <span className="sr-only">{t.cameraSelect}</span>
               <select
                 id="cameraSelect"
                 value={activeId ?? cameraId ?? ""}
@@ -272,21 +276,21 @@ export function CaptureScreen(props: Props) {
         <div className="viewfinder" style={{ "--ratio": aspect } as CSSProperties}>
           <video ref={videoRef} playsInline muted autoPlay />
           {recording && (
-            <div className="rec-badge" aria-label="녹화 중">
+            <div className="rec-badge" aria-label={t.recording}>
               REC
             </div>
           )}
           <div className="corner-marks" />
           {mode === "pending" && (
             <div className="vf-message">
-              <strong>카메라 준비 중…</strong>
+              <strong>{t.preparing}</strong>
             </div>
           )}
           {mode === "file" && (
             <div className="vf-message">
-              <strong>실시간 카메라를 쓸 수 없어요</strong>
-              <span>버튼을 누르면 iPad 카메라가 열립니다. 한 장씩 찍어 주세요.</span>
-              <span className="fine">HTTPS 주소에서 카메라 권한을 허용하면 실시간 촬영이 됩니다.</span>
+              <strong>{t.fileMode.title}</strong>
+              <span>{t.fileMode.body}</span>
+              <span className="fine">{t.fileMode.fine}</span>
             </div>
           )}
           {countdown !== null && (
@@ -299,7 +303,7 @@ export function CaptureScreen(props: Props) {
 
       <div className="thumbs">
         {shots.map((shot, i) => (
-          <ShotThumb key={i} shot={shot} index={i} aspect={photoAspect(layout, i)} highlighted={i === nextEmpty} label={`${i + 1}번 칸`} />
+          <ShotThumb key={i} shot={shot} index={i} aspect={photoAspect(layout, i)} highlighted={i === nextEmpty} label={t.slot(i + 1)} />
         ))}
       </div>
 

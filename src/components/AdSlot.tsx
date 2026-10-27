@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useI18n } from "@/i18n/I18nProvider";
 import { ADSENSE_CLIENT, AD_SLOTS, type AdPosition } from "@/lib/ads";
 
 declare global {
@@ -13,6 +14,7 @@ declare global {
 export function AdSlot({ position }: { position: AdPosition }) {
   const ref = useRef<HTMLModElement>(null);
   const slot = AD_SLOTS[position];
+  const { m } = useI18n();
 
   useEffect(() => {
     const ins = ref.current;
@@ -27,12 +29,12 @@ export function AdSlot({ position }: { position: AdPosition }) {
     if (process.env.NODE_ENV === "production") return null;
     return (
       <div className="ad-slot placeholder" aria-hidden>
-        광고 자리 ({position})
+        {m.common.adPlaceholder(position)}
       </div>
     );
   }
   return (
-    <aside className="ad-slot" aria-label="광고">
+    <aside className="ad-slot" aria-label={m.common.adLabel}>
       <ins
         ref={ref}
         className="adsbygoogle"

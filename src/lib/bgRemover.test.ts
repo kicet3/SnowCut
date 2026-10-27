@@ -1,14 +1,23 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { errorMessage } from "./bgRemover";
+import { BgRemoverError, responseError } from "./bgRemover";
 
-describe("누끼 서버 오류 문구", () => {
-  it("FastAPI의 detail을 그대로 보여 준다", () => {
-    expect(errorMessage(400, JSON.stringify({ detail: "최소 1개 이상의 좌표가 필요합니다" }))).toBe("최소 1개 이상의 좌표가 필요합니다");
+describe("누끼 서버 오류 응답", () => {
+  it("FastAPI의 detail을 그대로 담는다", () => {
+    const e = responseError(400, JSON.stringify({ detail: "최소 1개 이상의 좌표가 필요합니다" }));
+    expect(e).toBeInstanceOf(BgRemoverError);
+    expect(e.code).toBe("detail");
+    expect(e.detail).toBe("최소 1개 이상의 좌표가 필요합니다");
+    expect(e.message).toBe("최소 1개 이상의 좌표가 필요합니다");
   });
   it("본문이 JSON이 아니면 상태 코드로 고른다", () => {
-    expect(errorMessage(502, "<html>")).toMatch(/오류/);
-    expect(errorMessage(413, "")).toMatch(/너무 커요/);
-    expect(errorMessage(404, "")).toContain("404");
+    expect(responseError(502, "<html>").code).toBe("server");
+    expect(responseError(413, "").code).toBe("tooLarge");
+    const e = responseError(404, "");
+    expect(e.code).toBe("status");
+    expect(e.status).toBe(404);
+  });
+  it("detail이 문자열이 아니면 무시한다", () => {
+    expect(responseError(422, JSON.stringify({ detail: [{ msg: "x" }] })).code).toBe("status");
   });
 });
 
@@ -43,14 +52,38 @@ describe("배경 제거 요청", () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
     await expect(removeBackground(new Blob(), [[1, 1]])).rejects.toBeInstanceOf(BgRemoverError);
+    await expect(removeBackground(new Blob(), [[1, 1]])).rejects.toMatchObject({ code: "notConfigured" });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("연결 실패와 오류 응답을 사용자 문구로 바꾼다", async () => {
+  it("좌표가 없으면 요청하지 않는다", async () => {
+    const { removeBackground } = await load("/bg-remover");
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(removeBackground(new Blob(), [])).rejects.toMatchObject({ code: "noPoints" });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("연결 실패·오류 응답·이미지가 아닌 응답을 코드로 알린다", async () => {
     const { removeBackground } = await load("/bg-remover");
     vi.stubGlobal("fetch", vi.fn(async () => Promise.reject(new TypeError("Failed to fetch"))));
-    await expect(removeBackground(new Blob(), [[1, 1]])).rejects.toThrow(/연결하지 못했어요/);
+    await expect(removeBackground(new Blob(), [[1, 1]])).rejects.toMatchObject({ code: "network" });
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ detail: "이미지 파일을 읽을 수 없습니다" }), { status: 400 })));
-    await expect(removeBackground(new Blob(), [[1, 1]])).rejects.toThrow("이미지 파일을 읽을 수 없습니다");
+    await expect(removeBackground(new Blob(), [[1, 1]])).rejects.toMatchObject({ code: "detail", detail: "이미지 파일을 읽을 수 없습니다" });
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("oops", { status: 503 })));
+    await expect(removeBackground(new Blob(), [[1, 1]])).rejects.toMatchObject({ code: "server", status: 503 });
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 200, headers: { "content-type": "application/json" } })));
+    await expect(removeBackground(new Blob(), [[1, 1]])).rejects.toMatchObject({ code: "notImage" });
+  });
+
+  it("취소하면 원래 AbortError를 그대로 던진다", async () => {
+    const { removeBackground, BgRemoverError } = await load("/bg-remover");
+    const abort = new AbortController();
+    vi.stubGlobal("fetch", vi.fn(async () => {
+      abort.abort();
+      throw new DOMException("aborted", "AbortError");
+    }));
+    const err = await removeBackground(new Blob(), [[1, 1]], abort.signal).catch((e: unknown) => e);
+    expect(err).not.toBeInstanceOf(BgRemoverError);
   });
 });

@@ -1,0 +1,46 @@
+/** 커스텀 캐릭터 편집 창 (업로드 · 누끼 · 배치) */
+const editor = {
+  title: "커스텀 캐릭터",
+  done: "완료",
+  cutout: {
+    hint: "남길 캐릭터(피사체) 위를 눌러 점을 찍어 주세요. 여러 군데 누를수록 정확해요.",
+    hintNoServer: "누끼 서버가 설정되지 않아 배경을 지울 수 없어요. 배경이 투명한 PNG라면 그대로 쓸 수 있어요.",
+    points: (n: number) => `찍은 점 ${n}개`,
+    undoPoint: "마지막 점 지우기",
+    busy: "누끼 따는 중…",
+    run: "누끼 따기",
+    keepOriginal: "배경 그대로 쓰기",
+    cancel: "취소",
+  },
+  layout: "기본 레이아웃",
+  characters: {
+    label: "캐릭터",
+    hintPick: "눌러서 고르고, 끌어서 옮겨요",
+    hintEmpty: "이미지를 올려 시작해요",
+    item: (id: number) => `캐릭터 ${id}`,
+    upload: "이미지 올리기",
+  },
+  size: "크기",
+  rotation: "회전",
+  outline: "흰 테두리 (스티커)",
+  flip: "좌우 반전",
+  bringFront: "맨 앞으로",
+  remove: "삭제",
+  errors: {
+    upload: "이미지를 열지 못했어요. JPG·PNG 파일인지 확인해 주세요.",
+    allTransparent: "이미지가 전부 투명해요.",
+    unknown: "누끼를 따지 못했어요. 다시 해 주세요.",
+    notConfigured: "누끼 서버가 설정되지 않았어요.",
+    noPoints: "캐릭터 위를 한 번 이상 눌러 주세요.",
+    network: "누끼 서버에 연결하지 못했어요. 서버가 켜져 있는지 확인해 주세요.",
+    tooLarge: "이미지가 너무 커요. 더 작은 이미지로 해 주세요.",
+    server: "누끼 서버에서 오류가 났어요. 잠시 뒤 다시 해 주세요.",
+    status: (status: number) => `누끼를 따지 못했어요 (${status}).`,
+    notImage: "누끼 서버가 이미지가 아닌 응답을 보냈어요.",
+    prepare: "이미지를 준비하지 못했어요.",
+    notRemoved: "배경을 지우지 못했어요. 캐릭터 위를 다른 곳도 눌러서 다시 해 주세요.",
+    noSubject: "피사체를 찾지 못했어요. 캐릭터 위를 다시 눌러 주세요.",
+  },
+};
+
+export default editor;

@@ -4,6 +4,8 @@ import { useEffect, useReducer, useRef, useState, type ReactNode } from "react";
 import { initialState, reducer } from "@/lib/boothState";
 import { freeShot } from "@/lib/canvas";
 import { LAYOUT_KEYS, compatibleLayouts } from "@/lib/frame";
+import { CHARACTER_ENABLED } from "@/lib/site";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { CharacterEditor } from "./CharacterEditor";
 import { CaptureScreen } from "./CaptureScreen";
 import { ResultScreen, type ResultStep } from "./ResultScreen";
@@ -68,7 +70,7 @@ export function Booth() {
         filter={state.filter}
         video={state.video}
         characters={state.characters}
-        onCharacters={() => setEditingCharacters(true)}
+        onCharacters={() => setEditingCharacters(CHARACTER_ENABLED)}
         onFilter={(filter) => dispatch({ type: "filter", filter })}
         onFrame={(frame) => dispatch({ type: "frame", frame })}
         onLayout={(layout) => dispatch({ type: "layout", layout })}
@@ -91,7 +93,7 @@ export function Booth() {
         onLayout={(layout) => dispatch({ type: "layout", layout })}
         onTimer={(timer) => dispatch({ type: "timer", timer })}
         characterCount={state.characters.length}
-        onCharacters={() => setEditingCharacters(true)}
+        onCharacters={() => setEditingCharacters(CHARACTER_ENABLED)}
         onStart={() => {
           setResultStep("frame");
           freeAll();
@@ -108,9 +110,12 @@ export function Booth() {
         <div className="brand" id="brandLogo">
           Snow<span>Cut</span>
         </div>
+        {/* 언어를 바꾸면 페이지를 새로 불러와 찍은 사진이 사라지므로 시작 화면에서만 보여 준다. */}
+        {state.screen === "start" && <LanguageSwitcher className="dark" />}
       </header>
       {screen}
-      {editingCharacters && state.screen !== "capture" && (
+      {/* 커스텀 캐릭터가 꺼져 있으면 편집기를 열지 않는다. */}
+      {CHARACTER_ENABLED && editingCharacters && state.screen !== "capture" && (
         <CharacterEditor
           layout={state.layout}
           layouts={state.screen === "start" ? LAYOUT_KEYS : compatibleLayouts(state.layout)}

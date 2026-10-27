@@ -16,17 +16,25 @@ function constraints(deviceId: string | null): MediaStreamConstraints {
   };
 }
 
+/** 화면에 보이는 카메라 문구 (언어별) */
+export interface CameraMessages {
+  /** 이름을 알 수 없는 카메라 (1부터 센다) */
+  name: (n: number) => string;
+  /** 카메라 화면이 멈춰 촬영할 수 없을 때 */
+  frozen: string;
+}
+
 export interface CameraDevice {
   deviceId: string;
   label: string;
 }
 
-async function listCameras(): Promise<CameraDevice[]> {
+async function listCameras(text: CameraMessages): Promise<CameraDevice[]> {
   try {
     const all = await navigator.mediaDevices.enumerateDevices();
     return all
       .filter((d) => d.kind === "videoinput" && d.deviceId)
-      .map((d, i) => ({ deviceId: d.deviceId, label: d.label || `카메라 ${i + 1}` }));
+      .map((d, i) => ({ deviceId: d.deviceId, label: d.label || text.name(i + 1) }));
   } catch {
     return [];
   }
@@ -37,7 +45,7 @@ async function listCameras(): Promise<CameraDevice[]> {
  * getUserMedia를 쓸 수 없으면(HTTP 주소, 권한 거부, 카메라 없음) "file" 모드로 바뀐다.
  * deviceId로 고른 카메라가 빠져 있으면 기본 카메라로 연결한다.
  */
-export function useCamera(deviceId: string | null) {
+export function useCamera(deviceId: string | null, text: CameraMessages) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [mode, setMode] = useState<CameraMode>("pending");
@@ -46,12 +54,17 @@ export function useCamera(deviceId: string | null) {
   const [devices, setDevices] = useState<CameraDevice[]>([]);
   /** 실제로 연결된 카메라 */
   const [activeId, setActiveId] = useState<string | null>(null);
+  // 문구가 바뀌어도 카메라를 다시 연결하지 않도록 최신 값만 ref로 본다.
+  const textRef = useRef(text);
+  useEffect(() => {
+    textRef.current = text;
+  }, [text]);
 
   // 카메라를 꽂거나 빼면 목록을 새로 읽는다.
   useEffect(() => {
     const md = navigator.mediaDevices;
     if (!md?.addEventListener) return;
-    const onChange = () => void listCameras().then(setDevices);
+    const onChange = () => void listCameras(textRef.current).then(setDevices);
     md.addEventListener("devicechange", onChange);
     return () => md.removeEventListener("devicechange", onChange);
   }, []);
@@ -106,7 +119,7 @@ export function useCamera(deviceId: string | null) {
         setMode("live");
         setActiveId(stream.getVideoTracks()[0]?.getSettings().deviceId ?? null);
         // 권한을 받은 뒤에야 카메라 이름이 보인다.
-        void listCameras().then((list) => {
+        void listCameras(textRef.current).then((list) => {
           if (!cancelled) setDevices(list);
         });
         requestWakeLock();
@@ -152,7 +165,7 @@ export function useCamera(deviceId: string | null) {
     const video = videoRef.current;
     const track = streamRef.current?.getVideoTracks()[0];
     if (!video || !video.videoWidth || !track || track.muted || track.readyState !== "live" || video.paused) {
-      throw new Error("카메라 화면이 멈춰 있어요. 잠시 후 다시 눌러 주세요.");
+      throw new Error(textRef.current.frozen);
     }
     return toShot(video, true);
   }, []);

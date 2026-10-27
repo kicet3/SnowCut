@@ -5,11 +5,13 @@ import { canvasToJpeg, drawComposite, drawCover, type Shot } from "@/lib/canvas"
 import type { Character } from "@/lib/character";
 import { CAPTION, LAYOUTS, compatibleLayouts, fileNameFor, photoAspect, type LayoutKey } from "@/lib/frame";
 import { FRAMES, FRAME_CATEGORIES, frameDesign, type FrameCategory, type FrameId } from "@/lib/frames";
+import { useI18n } from "@/i18n/I18nProvider";
 import { filterShot } from "@/lib/look/apply";
 import { FILTERS, type FilterId } from "@/lib/look/presets";
 import { drawPrintSheet, pagesFor, printCounts, sheetPlan } from "@/lib/print";
 import { videoExtension } from "@/lib/recorder";
 import { downloadBlob, downloadImage, saveImage, type SaveOutcome } from "@/lib/saveImage";
+import { CHARACTER_ENABLED } from "@/lib/site";
 import { ShotThumb } from "./ShotThumb";
 
 interface Props {
@@ -45,12 +47,7 @@ interface Rendered {
 }
 
 export type ResultStep = "frame" | "filter" | "text" | "save";
-const STEPS: { id: ResultStep; name: string }[] = [
-  { id: "frame", name: "프레임" },
-  { id: "filter", name: "필터" },
-  { id: "text", name: "옵션" },
-  { id: "save", name: "저장" },
-];
+const STEPS: ResultStep[] = ["frame", "filter", "text", "save"];
 
 const NO_STATUS: SaveOutcome = { kind: "none", message: "" };
 
@@ -61,6 +58,7 @@ function cssVar(name: string): string {
 /** 내 사진이 들어간 프레임 축소 미리보기 */
 function FrameCard(props: {
   frame: FrameId;
+  name: string;
   layout: LayoutKey;
   shots: (Shot | null)[];
   revision: number;
@@ -69,7 +67,7 @@ function FrameCard(props: {
   selected: boolean;
   onPick: () => void;
 }) {
-  const { frame, layout, shots, revision, date, characters, selected, onPick } = props;
+  const { frame, name, layout, shots, revision, date, characters, selected, onPick } = props;
   const ref = useRef<HTMLCanvasElement>(null);
   const time = date?.getTime() ?? 0;
   useEffect(() => {
@@ -102,7 +100,7 @@ function FrameCard(props: {
       >
         <canvas ref={ref} aria-hidden />
       </span>
-      <span className="pick-name">{frameDesign(frame).name}</span>
+      <span className="pick-name">{name}</span>
     </button>
   );
 }
@@ -145,6 +143,8 @@ function FilterCard(props: {
 
 export function ResultScreen(props: Props) {
   const { layout, frame, showDate, shots, revision, capturedAt, filter, video, characters } = props;
+  const { m } = useI18n();
+  const t = m.result;
   // 캐릭터는 바꿀 때마다 새 배열이 오므로 배치 값으로 비교한다.
   const characterKey = characters.map((c) => `${c.id}:${c.x},${c.y},${c.size},${c.rotation},${+c.flip},${+c.outline}`).join(";");
   const key = `${layout}|${frame}|${showDate}|${revision}|${capturedAt.getTime()}|${filter}|${characterKey}`;
@@ -195,7 +195,7 @@ export function ResultScreen(props: Props) {
       } catch {}
       if (cancelled) return;
       if (!blob) {
-        setStatus({ kind: "bad", message: "사진을 만들지 못했어요. 설정을 바꾸면 다시 시도합니다." });
+        setStatus({ kind: "bad", message: t.renderFailed });
         return;
       }
       const url = URL.createObjectURL(blob);
@@ -236,7 +236,7 @@ export function ResultScreen(props: Props) {
     if (!rendered || saving) return;
     setSaving(true);
     try {
-      setStatus(await saveImage(rendered.blob, fileNameFor(capturedAt), rendered.url));
+      setStatus(await saveImage(rendered.blob, fileNameFor(capturedAt), rendered.url, t.save));
     } finally {
       setSaving(false);
     }
@@ -262,7 +262,7 @@ export function ResultScreen(props: Props) {
     setSaving(true);
     const url = URL.createObjectURL(video);
     try {
-      setStatus(await saveImage(video, videoName, url, "video"));
+      setStatus(await saveImage(video, videoName, url, t.save, "video"));
     } finally {
       setSaving(false);
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
@@ -270,7 +270,7 @@ export function ResultScreen(props: Props) {
   };
 
   const onDownloadVideo = () => {
-    if (video) setStatus(downloadBlob(video, videoName));
+    if (video) setStatus(downloadBlob(video, videoName, t.save));
   };
 
   // 인쇄용 시트(엽서 100×148mm)는 저장 단계에 있을 때만 만든다. 큰 캔버스라 다 만들면 바로 비운다.
@@ -326,12 +326,12 @@ export function ResultScreen(props: Props) {
 
   const onDownloadPrint = () => {
     if (!sheet) return;
-    setStatus(downloadImage(fileNameFor(capturedAt).replace(".jpg", "-print.jpg"), sheet.url));
+    setStatus(downloadImage(fileNameFor(capturedAt).replace(".jpg", "-print.jpg"), sheet.url, t.save));
   };
 
   const onDownload = () => {
     if (!rendered) return;
-    setStatus(downloadImage(fileNameFor(capturedAt), rendered.url));
+    setStatus(downloadImage(fileNameFor(capturedAt), rendered.url, t.save));
   };
 
   const spec = LAYOUTS[layout];
@@ -341,10 +341,10 @@ export function ResultScreen(props: Props) {
   const layouts = compatibleLayouts(layout);
   // 설정을 바꾼 뒤 아직 다시 그리는 중이면 저장을 막는다. 미리보기와 다른 사진이 저장되지 않도록.
   const stale = !rendered || rendered.key !== key;
-  const stepIndex = STEPS.findIndex((s) => s.id === step);
+  const stepIndex = STEPS.indexOf(step);
   const go = (i: number) => {
     setStatus(NO_STATUS);
-    setStep(STEPS[Math.max(0, Math.min(STEPS.length - 1, i))].id);
+    setStep(STEPS[Math.max(0, Math.min(STEPS.length - 1, i))]);
   };
   const date = showDate ? capturedAt : null;
 
@@ -358,35 +358,35 @@ export function ResultScreen(props: Props) {
             id="print"
             className="print"
             src={rendered.url}
-            alt="완성된 네컷 사진"
+            alt={t.photoAlt}
             style={{ "--ratio": spec.canvas.width / spec.canvas.height } as CSSProperties}
           />
         ) : (
-          <p className="hint">사진을 만드는 중…</p>
+          <p className="hint">{t.rendering}</p>
         )}
       </div>
 
-      <aside className="kiosk" aria-label="꾸미기">
+      <aside className="kiosk" aria-label={t.decorate}>
         <header className="kiosk-head">
-          <h2>꾸미기</h2>
+          <h2>{t.decorate}</h2>
           <span className="kiosk-size">
-            {spec.title} · {spec.canvas.width}×{spec.canvas.height}
+            {m.catalog.layouts[layout].title} · {spec.canvas.width}×{spec.canvas.height}
           </span>
         </header>
 
-        <nav className="steps" role="tablist" aria-label="단계">
+        <nav className="steps" role="tablist" aria-label={t.stepsLabel}>
           {STEPS.map((s, i) => (
             <button
-              key={s.id}
+              key={s}
               type="button"
               role="tab"
-              data-step={s.id}
-              aria-selected={step === s.id}
+              data-step={s}
+              aria-selected={step === s}
               className={i < stepIndex ? "done" : ""}
               onClick={() => go(i)}
             >
               <span className="step-no">{i < stepIndex ? "✓" : i + 1}</span>
-              {s.name}
+              {t.steps[s]}
             </button>
           ))}
         </nav>
@@ -395,7 +395,7 @@ export function ResultScreen(props: Props) {
           {step === "frame" && (
             <>
               {layouts.length > 1 && (
-                <div className="seg layouts" role="group" aria-label="레이아웃">
+                <div className="seg layouts" role="group" aria-label={t.layoutsLabel}>
                   {layouts.map((k) => (
                     <button
                       key={k}
@@ -404,12 +404,12 @@ export function ResultScreen(props: Props) {
                       aria-pressed={layout === k}
                       onClick={() => change(props.onLayout)(k)}
                     >
-                      {LAYOUTS[k].title}
+                      {m.catalog.layouts[k].title}
                     </button>
                   ))}
                 </div>
               )}
-              <div className="cats" role="group" aria-label="프레임 종류">
+              <div className="cats" role="group" aria-label={t.frameCategoriesLabel}>
                 {FRAME_CATEGORIES.map((c) => (
                   <button
                     key={c.id}
@@ -418,7 +418,7 @@ export function ResultScreen(props: Props) {
                     aria-pressed={category === c.id}
                     onClick={() => setCategory(c.id)}
                   >
-                    {c.name}
+                    {m.catalog.frameCategories[c.id]}
                   </button>
                 ))}
               </div>
@@ -427,6 +427,7 @@ export function ResultScreen(props: Props) {
                   <FrameCard
                     key={f.id}
                     frame={f.id}
+                    name={m.catalog.frames[f.id]}
                     layout={layout}
                     shots={shots}
                     revision={revision}
@@ -442,13 +443,13 @@ export function ResultScreen(props: Props) {
 
           {step === "filter" && (
             <>
-              <p className="kiosk-note">필터는 사진 칸에만 적용돼요.</p>
+              <p className="kiosk-note">{t.filterNote}</p>
               <div className="pick-grid photo">
                 {FILTERS.map((f) => (
                   <FilterCard
                     key={f.id}
                     filter={f.id}
-                    name={f.name}
+                    name={m.catalog.filters[f.id]}
                     shot={shots[0]}
                     aspect={aspect}
                     revision={revision}
@@ -463,7 +464,7 @@ export function ResultScreen(props: Props) {
           {step === "text" && (
             <>
               <label className="toggle" htmlFor="dateToggle">
-                <b>날짜 표시</b>
+                <b>{t.options.showDate}</b>
                 <input
                   id="dateToggle"
                   type="checkbox"
@@ -474,15 +475,28 @@ export function ResultScreen(props: Props) {
               </label>
               <div className="field">
                 <span className="field-label-row">
-                  <b>커스텀 캐릭터</b>
-                  <small>{characters.length ? `${characters.length}개` : "없음"}</small>
+                  <b>{t.options.characters}</b>
+                  <small>
+                    {!CHARACTER_ENABLED
+                      ? m.common.soonBadge
+                      : characters.length
+                        ? t.options.characterCount(characters.length)
+                        : t.options.noCharacters}
+                  </small>
                 </span>
-                <button type="button" className="btn-outline" onClick={props.onCharacters}>
-                  {characters.length ? "캐릭터 위치 · 크기 바꾸기" : "캐릭터 추가하기"}
-                </button>
+                {CHARACTER_ENABLED ? (
+                  <button type="button" className="btn-outline" onClick={props.onCharacters}>
+                    {characters.length ? t.options.editCharacters : t.options.addCharacters}
+                  </button>
+                ) : (
+                  // 준비 중: 누를 수 없게 막아 두고 안내만 한다.
+                  <button type="button" className="btn-outline" disabled>
+                    {m.common.comingSoon}
+                  </button>
+                )}
               </div>
               <div className="field">
-                <b>다시 찍기</b>
+                <b>{t.options.retake}</b>
                 <div className="retakes" id="retakeThumbs">
                   {shots.map((shot, i) => (
                     <ShotThumb
@@ -490,7 +504,7 @@ export function ResultScreen(props: Props) {
                       shot={shot}
                       index={i}
                       aspect={photoAspect(layout, i)}
-                      label={`${i + 1}번 사진 다시 찍기`}
+                      label={t.options.retakeShot(i + 1)}
                       onClick={() => props.onRetake(i)}
                     />
                   ))}
@@ -502,28 +516,28 @@ export function ResultScreen(props: Props) {
           {step === "save" && (
             <div className="actions">
               <button id="saveBtn" className="cta" type="button" disabled={stale || saving} onClick={onSave}>
-                사진 저장
+                {t.savePhoto}
               </button>
               <button id="downloadBtn" className="btn-outline" type="button" disabled={stale} onClick={onDownload}>
-                파일로 다운로드
+                {t.downloadPhoto}
               </button>
               <div className="print-box">
-                <b>프린터 인쇄 (캐논 SELPHY CP1500)</b>
-                <div className="stepper" role="group" aria-label="인쇄 수량">
+                <b>{t.print.title}</b>
+                <div className="stepper" role="group" aria-label={t.print.countLabel}>
                   <button
                     type="button"
-                    aria-label="수량 줄이기"
+                    aria-label={t.print.decrease}
                     disabled={count === counts[0]}
                     onClick={() => setPrintCount(counts[Math.max(0, counts.indexOf(count) - 1)])}
                   >
                     −
                   </button>
                   <output id="printCount">
-                    {count}개 <small>(용지 {pages}장)</small>
+                    {t.print.count(count)} <small>{t.print.pages(pages)}</small>
                   </output>
                   <button
                     type="button"
-                    aria-label="수량 늘리기"
+                    aria-label={t.print.increase}
                     disabled={count === counts[counts.length - 1]}
                     onClick={() => setPrintCount(counts[Math.min(counts.length - 1, counts.indexOf(count) + 1)])}
                   >
@@ -532,7 +546,7 @@ export function ResultScreen(props: Props) {
                 </div>
                 <div className="clip-actions">
                   <button id="printBtn" className="btn-outline" type="button" disabled={!printReady} onClick={onPrint}>
-                    인쇄
+                    {t.print.print}
                   </button>
                   <button
                     id="printFileBtn"
@@ -541,12 +555,18 @@ export function ResultScreen(props: Props) {
                     disabled={!printReady}
                     onClick={onDownloadPrint}
                   >
-                    인쇄용 이미지
+                    {t.print.printFile}
                   </button>
                 </div>
                 <p className="kiosk-note">
-                  인쇄 창에서 프린터 <b>SELPHY CP1500</b>, 용지 <b>엽서(100×148mm)</b>, <b>테두리 없음</b>을 고르세요.
-                  {perSheet === 2 && " 한 장에 두 개씩 나오니 가운데 표시를 따라 잘라 주세요."}
+                  {t.print.guide.beforePrinter}
+                  <b>{t.print.guide.printer}</b>
+                  {t.print.guide.beforePaper}
+                  <b>{t.print.guide.paper}</b>
+                  {t.print.guide.beforeBorderless}
+                  <b>{t.print.guide.borderless}</b>
+                  {t.print.guide.after}
+                  {perSheet === 2 && t.print.twoPerSheet}
                 </p>
               </div>
               <p className={`status${status.kind === "none" ? "" : " " + status.kind}`} role="status">
@@ -554,7 +574,7 @@ export function ResultScreen(props: Props) {
               </p>
               {video && (
                 <div className="clip" id="clip">
-                  <b>촬영 영상</b>
+                  <b>{t.video.title}</b>
                   <video ref={videoRef} controls playsInline muted loop preload="metadata" />
                   <div className="clip-actions">
                     <button
@@ -564,17 +584,18 @@ export function ResultScreen(props: Props) {
                       disabled={saving}
                       onClick={onSaveVideo}
                     >
-                      영상 저장
+                      {t.video.save}
                     </button>
                     <button id="downloadVideoBtn" className="btn-outline" type="button" onClick={onDownloadVideo}>
-                      영상 다운로드
+                      {t.video.download}
                     </button>
                   </div>
                 </div>
               )}
               <p className="kiosk-note">
-                iPad에서는 사진 저장 → 공유 시트의 <b>이미지 저장</b>을 고르면 사진 앱에 들어가요. 사진을 길게 눌러도
-                저장돼요.
+                {t.iosNote.before}
+                <b>{t.iosNote.action}</b>
+                {t.iosNote.after}
               </p>
             </div>
           )}
@@ -583,24 +604,24 @@ export function ResultScreen(props: Props) {
         <footer className="kiosk-foot">
           <div className="dots" aria-hidden>
             {STEPS.map((s, i) => (
-              <i key={s.id} className={i === stepIndex ? "on" : ""} />
+              <i key={s} className={i === stepIndex ? "on" : ""} />
             ))}
           </div>
           <div className="kiosk-nav">
             {stepIndex > 0 ? (
               <button type="button" className="btn-ghost" onClick={() => go(stepIndex - 1)}>
-                이전
+                {t.prev}
               </button>
             ) : (
               <span />
             )}
             {step === "save" ? (
               <button id="newBtn" type="button" className="cta" onClick={props.onNew}>
-                새로 찍기
+                {t.newShoot}
               </button>
             ) : (
               <button id="nextBtn" type="button" className="cta" onClick={() => go(stepIndex + 1)}>
-                다음
+                {t.next}
               </button>
             )}
           </div>

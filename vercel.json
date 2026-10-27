@@ -1,0 +1,281 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "cookie",
+          "key": "lang",
+          "value": "^(?<lang>en|ja|zh)$"
+        }
+      ],
+      "missing": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*([Bb][Oo][Tt]|[Cc][Rr][Aa][Ww][Ll]|[Ss][Pp][Ii][Dd][Ee][Rr]|[Ss][Ll][Uu][Rr][Pp]|[Yy][Ee][Tt][Ii]|[Dd][Aa][Uu][Mm]|[Bb][Yy][Tt][Ee][Ss][Pp][Ii][Dd][Ee][Rr]|[Ff][Aa][Cc][Ee][Bb][Oo][Oo][Kk][Ee][Xx][Tt][Ee][Rr][Nn][Aa][Ll][Hh][Ii][Tt]|[Ee][Mm][Bb][Ee][Dd][Ll][Yy]|[Pp][Rr][Ee][Vv][Ii][Ee][Ww]|[Mm][Ee][Dd][Ii][Aa][Pp][Aa][Rr][Tt][Nn][Ee][Rr][Ss]\\-[Gg][Oo][Oo][Gg][Ll][Ee]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Ii][Nn][Ss][Pp][Ee][Cc][Tt][Ii][Oo][Nn][Tt][Oo][Oo][Ll]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Rr][Ee][Aa][Dd]\\-[Aa][Ll][Oo][Uu][Dd]|[Gg][Oo][Oo][Gg][Ll][Ee][Oo][Tt][Hh][Ee][Rr]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Ee][Xx][Tt][Ee][Nn][Dd][Ee][Dd]|[Aa][Pp][Ii][Ss]\\-[Gg][Oo][Oo][Gg][Ll][Ee]|\\-[Uu][Ss][Ee][Rr]/|[Pp][Ee][Rr][Pp][Ll][Ee][Xx][Ii][Tt][Yy]|[Ww][Hh][Aa][Tt][Ss][Aa][Pp][Pp]|[Kk][Aa][Kk][Aa][Oo][Tt][Aa][Ll][Kk]\\-[Ss][Cc][Rr][Aa][Pp]).*"
+        }
+      ],
+      "destination": "/:lang",
+      "permanent": false
+    },
+    {
+      "source": "/booth",
+      "has": [
+        {
+          "type": "cookie",
+          "key": "lang",
+          "value": "^(?<lang>en|ja|zh)$"
+        }
+      ],
+      "missing": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*([Bb][Oo][Tt]|[Cc][Rr][Aa][Ww][Ll]|[Ss][Pp][Ii][Dd][Ee][Rr]|[Ss][Ll][Uu][Rr][Pp]|[Yy][Ee][Tt][Ii]|[Dd][Aa][Uu][Mm]|[Bb][Yy][Tt][Ee][Ss][Pp][Ii][Dd][Ee][Rr]|[Ff][Aa][Cc][Ee][Bb][Oo][Oo][Kk][Ee][Xx][Tt][Ee][Rr][Nn][Aa][Ll][Hh][Ii][Tt]|[Ee][Mm][Bb][Ee][Dd][Ll][Yy]|[Pp][Rr][Ee][Vv][Ii][Ee][Ww]|[Mm][Ee][Dd][Ii][Aa][Pp][Aa][Rr][Tt][Nn][Ee][Rr][Ss]\\-[Gg][Oo][Oo][Gg][Ll][Ee]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Ii][Nn][Ss][Pp][Ee][Cc][Tt][Ii][Oo][Nn][Tt][Oo][Oo][Ll]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Rr][Ee][Aa][Dd]\\-[Aa][Ll][Oo][Uu][Dd]|[Gg][Oo][Oo][Gg][Ll][Ee][Oo][Tt][Hh][Ee][Rr]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Ee][Xx][Tt][Ee][Nn][Dd][Ee][Dd]|[Aa][Pp][Ii][Ss]\\-[Gg][Oo][Oo][Gg][Ll][Ee]|\\-[Uu][Ss][Ee][Rr]/|[Pp][Ee][Rr][Pp][Ll][Ee][Xx][Ii][Tt][Yy]|[Ww][Hh][Aa][Tt][Ss][Aa][Pp][Pp]|[Kk][Aa][Kk][Aa][Oo][Tt][Aa][Ll][Kk]\\-[Ss][Cc][Rr][Aa][Pp]).*"
+        }
+      ],
+      "destination": "/:lang/booth",
+      "permanent": false
+    },
+    {
+      "source": "/privacy",
+      "has": [
+        {
+          "type": "cookie",
+          "key": "lang",
+          "value": "^(?<lang>en|ja|zh)$"
+        }
+      ],
+      "missing": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*([Bb][Oo][Tt]|[Cc][Rr][Aa][Ww][Ll]|[Ss][Pp][Ii][Dd][Ee][Rr]|[Ss][Ll][Uu][Rr][Pp]|[Yy][Ee][Tt][Ii]|[Dd][Aa][Uu][Mm]|[Bb][Yy][Tt][Ee][Ss][Pp][Ii][Dd][Ee][Rr]|[Ff][Aa][Cc][Ee][Bb][Oo][Oo][Kk][Ee][Xx][Tt][Ee][Rr][Nn][Aa][Ll][Hh][Ii][Tt]|[Ee][Mm][Bb][Ee][Dd][Ll][Yy]|[Pp][Rr][Ee][Vv][Ii][Ee][Ww]|[Mm][Ee][Dd][Ii][Aa][Pp][Aa][Rr][Tt][Nn][Ee][Rr][Ss]\\-[Gg][Oo][Oo][Gg][Ll][Ee]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Ii][Nn][Ss][Pp][Ee][Cc][Tt][Ii][Oo][Nn][Tt][Oo][Oo][Ll]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Rr][Ee][Aa][Dd]\\-[Aa][Ll][Oo][Uu][Dd]|[Gg][Oo][Oo][Gg][Ll][Ee][Oo][Tt][Hh][Ee][Rr]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Ee][Xx][Tt][Ee][Nn][Dd][Ee][Dd]|[Aa][Pp][Ii][Ss]\\-[Gg][Oo][Oo][Gg][Ll][Ee]|\\-[Uu][Ss][Ee][Rr]/|[Pp][Ee][Rr][Pp][Ll][Ee][Xx][Ii][Tt][Yy]|[Ww][Hh][Aa][Tt][Ss][Aa][Pp][Pp]|[Kk][Aa][Kk][Aa][Oo][Tt][Aa][Ll][Kk]\\-[Ss][Cc][Rr][Aa][Pp]).*"
+        }
+      ],
+      "destination": "/:lang/privacy",
+      "permanent": false
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "header",
+          "key": "x-vercel-ip-country",
+          "value": "^(JP)$"
+        }
+      ],
+      "missing": [
+        {
+          "type": "cookie",
+          "key": "lang"
+        },
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*([Bb][Oo][Tt]|[Cc][Rr][Aa][Ww][Ll]|[Ss][Pp][Ii][Dd][Ee][Rr]|[Ss][Ll][Uu][Rr][Pp]|[Yy][Ee][Tt][Ii]|[Dd][Aa][Uu][Mm]|[Bb][Yy][Tt][Ee][Ss][Pp][Ii][Dd][Ee][Rr]|[Ff][Aa][Cc][Ee][Bb][Oo][Oo][Kk][Ee][Xx][Tt][Ee][Rr][Nn][Aa][Ll][Hh][Ii][Tt]|[Ee][Mm][Bb][Ee][Dd][Ll][Yy]|[Pp][Rr][Ee][Vv][Ii][Ee][Ww]|[Mm][Ee][Dd][Ii][Aa][Pp][Aa][Rr][Tt][Nn][Ee][Rr][Ss]\\-[Gg][Oo][Oo][Gg][Ll][Ee]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Ii][Nn][Ss][Pp][Ee][Cc][Tt][Ii][Oo][Nn][Tt][Oo][Oo][Ll]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Rr][Ee][Aa][Dd]\\-[Aa][Ll][Oo][Uu][Dd]|[Gg][Oo][Oo][Gg][Ll][Ee][Oo][Tt][Hh][Ee][Rr]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Ee][Xx][Tt][Ee][Nn][Dd][Ee][Dd]|[Aa][Pp][Ii][Ss]\\-[Gg][Oo][Oo][Gg][Ll][Ee]|\\-[Uu][Ss][Ee][Rr]/|[Pp][Ee][Rr][Pp][Ll][Ee][Xx][Ii][Tt][Yy]|[Ww][Hh][Aa][Tt][Ss][Aa][Pp][Pp]|[Kk][Aa][Kk][Aa][Oo][Tt][Aa][Ll][Kk]\\-[Ss][Cc][Rr][Aa][Pp]).*"
+        }
+      ],
+      "destination": "/ja",
+      "permanent": false
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "header",
+          "key": "x-vercel-ip-country",
+          "value": "^(CN|TW|HK|MO)$"
+        }
+      ],
+      "missing": [
+        {
+          "type": "cookie",
+          "key": "lang"
+        },
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*([Bb][Oo][Tt]|[Cc][Rr][Aa][Ww][Ll]|[Ss][Pp][Ii][Dd][Ee][Rr]|[Ss][Ll][Uu][Rr][Pp]|[Yy][Ee][Tt][Ii]|[Dd][Aa][Uu][Mm]|[Bb][Yy][Tt][Ee][Ss][Pp][Ii][Dd][Ee][Rr]|[Ff][Aa][Cc][Ee][Bb][Oo][Oo][Kk][Ee][Xx][Tt][Ee][Rr][Nn][Aa][Ll][Hh][Ii][Tt]|[Ee][Mm][Bb][Ee][Dd][Ll][Yy]|[Pp][Rr][Ee][Vv][Ii][Ee][Ww]|[Mm][Ee][Dd][Ii][Aa][Pp][Aa][Rr][Tt][Nn][Ee][Rr][Ss]\\-[Gg][Oo][Oo][Gg][Ll][Ee]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Ii][Nn][Ss][Pp][Ee][Cc][Tt][Ii][Oo][Nn][Tt][Oo][Oo][Ll]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Rr][Ee][Aa][Dd]\\-[Aa][Ll][Oo][Uu][Dd]|[Gg][Oo][Oo][Gg][Ll][Ee][Oo][Tt][Hh][Ee][Rr]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Ee][Xx][Tt][Ee][Nn][Dd][Ee][Dd]|[Aa][Pp][Ii][Ss]\\-[Gg][Oo][Oo][Gg][Ll][Ee]|\\-[Uu][Ss][Ee][Rr]/|[Pp][Ee][Rr][Pp][Ll][Ee][Xx][Ii][Tt][Yy]|[Ww][Hh][Aa][Tt][Ss][Aa][Pp][Pp]|[Kk][Aa][Kk][Aa][Oo][Tt][Aa][Ll][Kk]\\-[Ss][Cc][Rr][Aa][Pp]).*"
+        }
+      ],
+      "destination": "/zh",
+      "permanent": false
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "header",
+          "key": "x-vercel-ip-country"
+        }
+      ],
+      "missing": [
+        {
+          "type": "header",
+          "key": "x-vercel-ip-country",
+          "value": "^(KR|JP|CN|TW|HK|MO)$"
+        },
+        {
+          "type": "cookie",
+          "key": "lang"
+        },
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*([Bb][Oo][Tt]|[Cc][Rr][Aa][Ww][Ll]|[Ss][Pp][Ii][Dd][Ee][Rr]|[Ss][Ll][Uu][Rr][Pp]|[Yy][Ee][Tt][Ii]|[Dd][Aa][Uu][Mm]|[Bb][Yy][Tt][Ee][Ss][Pp][Ii][Dd][Ee][Rr]|[Ff][Aa][Cc][Ee][Bb][Oo][Oo][Kk][Ee][Xx][Tt][Ee][Rr][Nn][Aa][Ll][Hh][Ii][Tt]|[Ee][Mm][Bb][Ee][Dd][Ll][Yy]|[Pp][Rr][Ee][Vv][Ii][Ee][Ww]|[Mm][Ee][Dd][Ii][Aa][Pp][Aa][Rr][Tt][Nn][Ee][Rr][Ss]\\-[Gg][Oo][Oo][Gg][Ll][Ee]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Ii][Nn][Ss][Pp][Ee][Cc][Tt][Ii][Oo][Nn][Tt][Oo][Oo][Ll]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Rr][Ee][Aa][Dd]\\-[Aa][Ll][Oo][Uu][Dd]|[Gg][Oo][Oo][Gg][Ll][Ee][Oo][Tt][Hh][Ee][Rr]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Ee][Xx][Tt][Ee][Nn][Dd][Ee][Dd]|[Aa][Pp][Ii][Ss]\\-[Gg][Oo][Oo][Gg][Ll][Ee]|\\-[Uu][Ss][Ee][Rr]/|[Pp][Ee][Rr][Pp][Ll][Ee][Xx][Ii][Tt][Yy]|[Ww][Hh][Aa][Tt][Ss][Aa][Pp][Pp]|[Kk][Aa][Kk][Aa][Oo][Tt][Aa][Ll][Kk]\\-[Ss][Cc][Rr][Aa][Pp]).*"
+        }
+      ],
+      "destination": "/en",
+      "permanent": false
+    },
+    {
+      "source": "/booth",
+      "has": [
+        {
+          "type": "header",
+          "key": "x-vercel-ip-country",
+          "value": "^(JP)$"
+        }
+      ],
+      "missing": [
+        {
+          "type": "cookie",
+          "key": "lang"
+        },
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*([Bb][Oo][Tt]|[Cc][Rr][Aa][Ww][Ll]|[Ss][Pp][Ii][Dd][Ee][Rr]|[Ss][Ll][Uu][Rr][Pp]|[Yy][Ee][Tt][Ii]|[Dd][Aa][Uu][Mm]|[Bb][Yy][Tt][Ee][Ss][Pp][Ii][Dd][Ee][Rr]|[Ff][Aa][Cc][Ee][Bb][Oo][Oo][Kk][Ee][Xx][Tt][Ee][Rr][Nn][Aa][Ll][Hh][Ii][Tt]|[Ee][Mm][Bb][Ee][Dd][Ll][Yy]|[Pp][Rr][Ee][Vv][Ii][Ee][Ww]|[Mm][Ee][Dd][Ii][Aa][Pp][Aa][Rr][Tt][Nn][Ee][Rr][Ss]\\-[Gg][Oo][Oo][Gg][Ll][Ee]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Ii][Nn][Ss][Pp][Ee][Cc][Tt][Ii][Oo][Nn][Tt][Oo][Oo][Ll]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Rr][Ee][Aa][Dd]\\-[Aa][Ll][Oo][Uu][Dd]|[Gg][Oo][Oo][Gg][Ll][Ee][Oo][Tt][Hh][Ee][Rr]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Ee][Xx][Tt][Ee][Nn][Dd][Ee][Dd]|[Aa][Pp][Ii][Ss]\\-[Gg][Oo][Oo][Gg][Ll][Ee]|\\-[Uu][Ss][Ee][Rr]/|[Pp][Ee][Rr][Pp][Ll][Ee][Xx][Ii][Tt][Yy]|[Ww][Hh][Aa][Tt][Ss][Aa][Pp][Pp]|[Kk][Aa][Kk][Aa][Oo][Tt][Aa][Ll][Kk]\\-[Ss][Cc][Rr][Aa][Pp]).*"
+        }
+      ],
+      "destination": "/ja/booth",
+      "permanent": false
+    },
+    {
+      "source": "/booth",
+      "has": [
+        {
+          "type": "header",
+          "key": "x-vercel-ip-country",
+          "value": "^(CN|TW|HK|MO)$"
+        }
+      ],
+      "missing": [
+        {
+          "type": "cookie",
+          "key": "lang"
+        },
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*([Bb][Oo][Tt]|[Cc][Rr][Aa][Ww][Ll]|[Ss][Pp][Ii][Dd][Ee][Rr]|[Ss][Ll][Uu][Rr][Pp]|[Yy][Ee][Tt][Ii]|[Dd][Aa][Uu][Mm]|[Bb][Yy][Tt][Ee][Ss][Pp][Ii][Dd][Ee][Rr]|[Ff][Aa][Cc][Ee][Bb][Oo][Oo][Kk][Ee][Xx][Tt][Ee][Rr][Nn][Aa][Ll][Hh][Ii][Tt]|[Ee][Mm][Bb][Ee][Dd][Ll][Yy]|[Pp][Rr][Ee][Vv][Ii][Ee][Ww]|[Mm][Ee][Dd][Ii][Aa][Pp][Aa][Rr][Tt][Nn][Ee][Rr][Ss]\\-[Gg][Oo][Oo][Gg][Ll][Ee]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Ii][Nn][Ss][Pp][Ee][Cc][Tt][Ii][Oo][Nn][Tt][Oo][Oo][Ll]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Rr][Ee][Aa][Dd]\\-[Aa][Ll][Oo][Uu][Dd]|[Gg][Oo][Oo][Gg][Ll][Ee][Oo][Tt][Hh][Ee][Rr]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Ee][Xx][Tt][Ee][Nn][Dd][Ee][Dd]|[Aa][Pp][Ii][Ss]\\-[Gg][Oo][Oo][Gg][Ll][Ee]|\\-[Uu][Ss][Ee][Rr]/|[Pp][Ee][Rr][Pp][Ll][Ee][Xx][Ii][Tt][Yy]|[Ww][Hh][Aa][Tt][Ss][Aa][Pp][Pp]|[Kk][Aa][Kk][Aa][Oo][Tt][Aa][Ll][Kk]\\-[Ss][Cc][Rr][Aa][Pp]).*"
+        }
+      ],
+      "destination": "/zh/booth",
+      "permanent": false
+    },
+    {
+      "source": "/booth",
+      "has": [
+        {
+          "type": "header",
+          "key": "x-vercel-ip-country"
+        }
+      ],
+      "missing": [
+        {
+          "type": "header",
+          "key": "x-vercel-ip-country",
+          "value": "^(KR|JP|CN|TW|HK|MO)$"
+        },
+        {
+          "type": "cookie",
+          "key": "lang"
+        },
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*([Bb][Oo][Tt]|[Cc][Rr][Aa][Ww][Ll]|[Ss][Pp][Ii][Dd][Ee][Rr]|[Ss][Ll][Uu][Rr][Pp]|[Yy][Ee][Tt][Ii]|[Dd][Aa][Uu][Mm]|[Bb][Yy][Tt][Ee][Ss][Pp][Ii][Dd][Ee][Rr]|[Ff][Aa][Cc][Ee][Bb][Oo][Oo][Kk][Ee][Xx][Tt][Ee][Rr][Nn][Aa][Ll][Hh][Ii][Tt]|[Ee][Mm][Bb][Ee][Dd][Ll][Yy]|[Pp][Rr][Ee][Vv][Ii][Ee][Ww]|[Mm][Ee][Dd][Ii][Aa][Pp][Aa][Rr][Tt][Nn][Ee][Rr][Ss]\\-[Gg][Oo][Oo][Gg][Ll][Ee]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Ii][Nn][Ss][Pp][Ee][Cc][Tt][Ii][Oo][Nn][Tt][Oo][Oo][Ll]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Rr][Ee][Aa][Dd]\\-[Aa][Ll][Oo][Uu][Dd]|[Gg][Oo][Oo][Gg][Ll][Ee][Oo][Tt][Hh][Ee][Rr]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Ee][Xx][Tt][Ee][Nn][Dd][Ee][Dd]|[Aa][Pp][Ii][Ss]\\-[Gg][Oo][Oo][Gg][Ll][Ee]|\\-[Uu][Ss][Ee][Rr]/|[Pp][Ee][Rr][Pp][Ll][Ee][Xx][Ii][Tt][Yy]|[Ww][Hh][Aa][Tt][Ss][Aa][Pp][Pp]|[Kk][Aa][Kk][Aa][Oo][Tt][Aa][Ll][Kk]\\-[Ss][Cc][Rr][Aa][Pp]).*"
+        }
+      ],
+      "destination": "/en/booth",
+      "permanent": false
+    },
+    {
+      "source": "/privacy",
+      "has": [
+        {
+          "type": "header",
+          "key": "x-vercel-ip-country",
+          "value": "^(JP)$"
+        }
+      ],
+      "missing": [
+        {
+          "type": "cookie",
+          "key": "lang"
+        },
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*([Bb][Oo][Tt]|[Cc][Rr][Aa][Ww][Ll]|[Ss][Pp][Ii][Dd][Ee][Rr]|[Ss][Ll][Uu][Rr][Pp]|[Yy][Ee][Tt][Ii]|[Dd][Aa][Uu][Mm]|[Bb][Yy][Tt][Ee][Ss][Pp][Ii][Dd][Ee][Rr]|[Ff][Aa][Cc][Ee][Bb][Oo][Oo][Kk][Ee][Xx][Tt][Ee][Rr][Nn][Aa][Ll][Hh][Ii][Tt]|[Ee][Mm][Bb][Ee][Dd][Ll][Yy]|[Pp][Rr][Ee][Vv][Ii][Ee][Ww]|[Mm][Ee][Dd][Ii][Aa][Pp][Aa][Rr][Tt][Nn][Ee][Rr][Ss]\\-[Gg][Oo][Oo][Gg][Ll][Ee]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Ii][Nn][Ss][Pp][Ee][Cc][Tt][Ii][Oo][Nn][Tt][Oo][Oo][Ll]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Rr][Ee][Aa][Dd]\\-[Aa][Ll][Oo][Uu][Dd]|[Gg][Oo][Oo][Gg][Ll][Ee][Oo][Tt][Hh][Ee][Rr]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Ee][Xx][Tt][Ee][Nn][Dd][Ee][Dd]|[Aa][Pp][Ii][Ss]\\-[Gg][Oo][Oo][Gg][Ll][Ee]|\\-[Uu][Ss][Ee][Rr]/|[Pp][Ee][Rr][Pp][Ll][Ee][Xx][Ii][Tt][Yy]|[Ww][Hh][Aa][Tt][Ss][Aa][Pp][Pp]|[Kk][Aa][Kk][Aa][Oo][Tt][Aa][Ll][Kk]\\-[Ss][Cc][Rr][Aa][Pp]).*"
+        }
+      ],
+      "destination": "/ja/privacy",
+      "permanent": false
+    },
+    {
+      "source": "/privacy",
+      "has": [
+        {
+          "type": "header",
+          "key": "x-vercel-ip-country",
+          "value": "^(CN|TW|HK|MO)$"
+        }
+      ],
+      "missing": [
+        {
+          "type": "cookie",
+          "key": "lang"
+        },
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*([Bb][Oo][Tt]|[Cc][Rr][Aa][Ww][Ll]|[Ss][Pp][Ii][Dd][Ee][Rr]|[Ss][Ll][Uu][Rr][Pp]|[Yy][Ee][Tt][Ii]|[Dd][Aa][Uu][Mm]|[Bb][Yy][Tt][Ee][Ss][Pp][Ii][Dd][Ee][Rr]|[Ff][Aa][Cc][Ee][Bb][Oo][Oo][Kk][Ee][Xx][Tt][Ee][Rr][Nn][Aa][Ll][Hh][Ii][Tt]|[Ee][Mm][Bb][Ee][Dd][Ll][Yy]|[Pp][Rr][Ee][Vv][Ii][Ee][Ww]|[Mm][Ee][Dd][Ii][Aa][Pp][Aa][Rr][Tt][Nn][Ee][Rr][Ss]\\-[Gg][Oo][Oo][Gg][Ll][Ee]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Ii][Nn][Ss][Pp][Ee][Cc][Tt][Ii][Oo][Nn][Tt][Oo][Oo][Ll]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Rr][Ee][Aa][Dd]\\-[Aa][Ll][Oo][Uu][Dd]|[Gg][Oo][Oo][Gg][Ll][Ee][Oo][Tt][Hh][Ee][Rr]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Ee][Xx][Tt][Ee][Nn][Dd][Ee][Dd]|[Aa][Pp][Ii][Ss]\\-[Gg][Oo][Oo][Gg][Ll][Ee]|\\-[Uu][Ss][Ee][Rr]/|[Pp][Ee][Rr][Pp][Ll][Ee][Xx][Ii][Tt][Yy]|[Ww][Hh][Aa][Tt][Ss][Aa][Pp][Pp]|[Kk][Aa][Kk][Aa][Oo][Tt][Aa][Ll][Kk]\\-[Ss][Cc][Rr][Aa][Pp]).*"
+        }
+      ],
+      "destination": "/zh/privacy",
+      "permanent": false
+    },
+    {
+      "source": "/privacy",
+      "has": [
+        {
+          "type": "header",
+          "key": "x-vercel-ip-country"
+        }
+      ],
+      "missing": [
+        {
+          "type": "header",
+          "key": "x-vercel-ip-country",
+          "value": "^(KR|JP|CN|TW|HK|MO)$"
+        },
+        {
+          "type": "cookie",
+          "key": "lang"
+        },
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*([Bb][Oo][Tt]|[Cc][Rr][Aa][Ww][Ll]|[Ss][Pp][Ii][Dd][Ee][Rr]|[Ss][Ll][Uu][Rr][Pp]|[Yy][Ee][Tt][Ii]|[Dd][Aa][Uu][Mm]|[Bb][Yy][Tt][Ee][Ss][Pp][Ii][Dd][Ee][Rr]|[Ff][Aa][Cc][Ee][Bb][Oo][Oo][Kk][Ee][Xx][Tt][Ee][Rr][Nn][Aa][Ll][Hh][Ii][Tt]|[Ee][Mm][Bb][Ee][Dd][Ll][Yy]|[Pp][Rr][Ee][Vv][Ii][Ee][Ww]|[Mm][Ee][Dd][Ii][Aa][Pp][Aa][Rr][Tt][Nn][Ee][Rr][Ss]\\-[Gg][Oo][Oo][Gg][Ll][Ee]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Ii][Nn][Ss][Pp][Ee][Cc][Tt][Ii][Oo][Nn][Tt][Oo][Oo][Ll]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Rr][Ee][Aa][Dd]\\-[Aa][Ll][Oo][Uu][Dd]|[Gg][Oo][Oo][Gg][Ll][Ee][Oo][Tt][Hh][Ee][Rr]|[Gg][Oo][Oo][Gg][Ll][Ee]\\-[Ee][Xx][Tt][Ee][Nn][Dd][Ee][Dd]|[Aa][Pp][Ii][Ss]\\-[Gg][Oo][Oo][Gg][Ll][Ee]|\\-[Uu][Ss][Ee][Rr]/|[Pp][Ee][Rr][Pp][Ll][Ee][Xx][Ii][Tt][Yy]|[Ww][Hh][Aa][Tt][Ss][Aa][Pp][Pp]|[Kk][Aa][Kk][Aa][Oo][Tt][Aa][Ll][Kk]\\-[Ss][Cc][Rr][Aa][Pp]).*"
+        }
+      ],
+      "destination": "/en/privacy",
+      "permanent": false
+    }
+  ]
+}

@@ -10,10 +10,25 @@
   --accent-ink: #2a1a05;
   --rec: #e5484d;
   /* next/font가 붙여 주는 --font-*-face 변수 뒤에 대체 글꼴을 둔다. --font-print는 합성 사진의 문구에도 쓰인다. */
-  --font-display: var(--font-display-face), "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-  --font-body: var(--font-body-face), "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
-  --font-print: var(--font-print-face), "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  /* 한글 웹폰트에 없는 일본어·중국어 글자는 각 OS 글꼴로 채운다. */
+  --cjk-fallback: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "PingFang SC", "Microsoft YaHei", "Yu Gothic", "Noto Sans JP", "Noto Sans SC";
+  --font-display: var(--font-display-face), "Apple SD Gothic Neo", "Malgun Gothic", var(--cjk-fallback), sans-serif;
+  --font-body: var(--font-body-face), "Apple SD Gothic Neo", "Malgun Gothic", var(--cjk-fallback), system-ui, sans-serif;
+  --font-print: var(--font-print-face), "Apple SD Gothic Neo", "Malgun Gothic", var(--cjk-fallback), sans-serif;
   color-scheme: dark;
+}
+/* 일본어·중국어 페이지: 한자·가나를 한국어 글꼴(한자 모양이 다름)이 아니라 그 언어 글꼴로 그린다.
+   제목용 웹폰트(라틴·한글만 있음)는 앞에 두어 로고·영문 모양은 같게 유지한다. */
+:root:lang(ja) {
+  --cjk-local: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "Noto Sans JP";
+}
+:root:lang(zh-Hans) {
+  --cjk-local: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC";
+}
+:root:lang(ja), :root:lang(zh-Hans) {
+  --font-display: var(--font-display-face), var(--cjk-local), sans-serif;
+  --font-body: var(--cjk-local), system-ui, sans-serif;
+  --font-print: var(--font-print-face), var(--cjk-local), sans-serif;
 }
 [hidden] { display: none !important; }
 html { box-sizing: border-box; height: 100%; }
@@ -44,6 +59,29 @@ button { cursor: pointer; }
   -webkit-user-select: none; user-select: none; touch-action: manipulation;
 }
 .brand span { color: var(--accent); }
+.brand-bar { gap: 12px; justify-content: space-between; padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+/* 언어 고르기: 밝은 화면(메인)과 어두운 촬영 화면(.dark) 공용 */
+.lang-switch {
+  position: relative; display: inline-flex; align-items: center; gap: 4px; min-height: 40px; padding: 0 8px 0 10px;
+  border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); font-size: 14px; font-weight: 700;
+}
+.lang-switch select {
+  appearance: none; -webkit-appearance: none; border: 0; background: transparent; color: inherit; font: inherit;
+  padding: 8px 18px 8px 2px; cursor: pointer;
+}
+.lang-switch::after { content: "▾"; position: absolute; right: 10px; pointer-events: none; font-size: 11px; opacity: .7; }
+.lang-switch select:focus-visible { outline: none; }
+.lang-switch:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.lang-switch.dark { min-height: 36px; background: rgba(255,255,255,.06); }
+.lang-switch option { color: #2b1d22; }
+/* 준비 중 표시 */
+.soon-badge {
+  display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; vertical-align: middle;
+  background: var(--muted); color: var(--bg); font-size: 12px; font-weight: 800; letter-spacing: 0; font-family: var(--font-body);
+}
+.layout-card:disabled { cursor: not-allowed; opacity: .55; }
+.layout-card:disabled .character-art em { filter: grayscale(1); }
 .screen {
   flex: 1;
   min-height: 0;
@@ -420,7 +458,8 @@ button { cursor: pointer; }
   background: color-mix(in srgb, var(--bg) 90%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
 }
-.home-bar > .btn { grid-column: 3; justify-self: end; }
+.home-bar > .btn, .home-bar-end { grid-column: 3; justify-self: end; }
+.home-bar-end { display: flex; align-items: center; gap: 10px; }
 .home-bar .brand { grid-column: 2; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: var(--fg); font-family: var(--font-home); letter-spacing: 0; font-size: 26px; }
 .home-bar .brand img { border-radius: 8px; }
 .home-bar .brand-word { color: var(--fg); }
@@ -484,6 +523,11 @@ button { cursor: pointer; }
 .home-section h3 { margin: 0 0 6px; font-size: 18px; }
 .home-section p { margin: 0; color: var(--muted); line-height: 1.6; }
 .home .ad-slot { margin: 24px 0; }
+/* "SnowCut이란?" 정의 문단: 검색 결과·AI 요약이 인용하기 좋게 짧고 분명하게 */
+.about { padding: 48px 0 8px; }
+.about h2 { margin: 0 0 12px; font-family: var(--font-home); font-weight: 400; font-size: clamp(24px, 3vw, 30px); color: var(--accent); text-align: center; }
+.about p { margin: 0 auto; max-width: 46em; color: var(--fg); font-size: 17px; line-height: 1.8; text-align: center; }
+.feature-grid li.soon { opacity: .7; border-style: dashed; }
 
 .frame-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin-top: 24px; }
 .frame-row h3 { margin: 0; font-size: 16px; color: var(--muted); }
@@ -536,11 +580,22 @@ button { cursor: pointer; }
   .home-nav { display: none; }
   .home-bar { grid-template-columns: auto 1fr; }
   .home-bar .brand { grid-column: 1; }
-  .home-bar > .btn { grid-column: 2; }
+  .home-bar > .btn, .home-bar-end { grid-column: 2; }
   .hs-2, .hs-4, .st-spark2, .st-cheese { display: none; }
   .hs-1 { left: -10px; top: 4%; }
   .hs-3 { right: -24px; top: auto; bottom: 4%; }
   .st-badge { right: 6%; top: 4%; font-size: 18px; }
+}
+.home-bar .btn.small { white-space: nowrap; }
+@media (max-width: 480px) {
+  /* 좁은 화면: 로고 · 언어 · 촬영 버튼이 한 줄에 들어가도록 */
+  .home-bar { gap: 8px; }
+  .home-bar .brand { font-size: 22px; gap: 6px; }
+  .home-bar .brand img { width: 26px; height: 26px; }
+  .home-bar-end { gap: 6px; }
+  .home-bar .lang-switch > span[aria-hidden] { display: none; }
+  .home-bar .lang-switch { padding-left: 4px; }
+  .home-bar .btn.small { padding: 0 14px; font-size: 14px; }
 }
 @media (max-width: 640px) {
   .hero { min-height: 0; padding: 150px 16px 160px; }

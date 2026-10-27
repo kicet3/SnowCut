@@ -1,10 +1,11 @@
+import type { Messages } from "@/i18n/messages";
+
 export type SaveOutcome = { kind: "ok" | "bad" | "none"; message: string };
 
 export type MediaKind = "image" | "video";
 
-export const LONG_PRESS_HINT = "사진을 길게 눌러 사진 앱에 저장할 수 있어요.";
-
-const NOUN: Record<MediaKind, string> = { image: "이미지", video: "동영상" };
+/** 저장 · 다운로드 결과 문구 */
+export type SaveMessages = Messages["result"]["save"];
 
 function isIOS(): boolean {
   return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
@@ -19,6 +20,7 @@ export async function saveImage(
   blob: Blob,
   fileName: string,
   objectUrl: string,
+  m: SaveMessages,
   kind: MediaKind = "image",
 ): Promise<SaveOutcome> {
   const file = new File([blob], fileName, { type: blob.type || "image/jpeg" });
@@ -26,25 +28,24 @@ export async function saveImage(
   if (typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
     try {
       await navigator.share({ files: [file] });
-      return { kind: "ok", message: `공유 시트에서 ${NOUN[kind]} 저장을 골랐다면 사진 앱에 저장됐어요.` };
+      return { kind: "ok", message: m.shared[kind] };
     } catch (err) {
       const name = err instanceof Error ? err.name : "";
       if (name === "AbortError" || name === "InvalidStateError") return { kind: "none", message: "" };
-      const fallback = kind === "image" ? LONG_PRESS_HINT : "파일로 다운로드를 눌러 주세요.";
-      return { kind: "bad", message: "공유 시트를 열지 못했어요. 다시 누르거나 " + fallback };
+      return { kind: "bad", message: m.shareFailed[kind] };
     }
   }
 
   // iOS에서 다운로드 링크는 사진 앱으로 가지 않으므로 길게 누르기를 안내한다.
-  if (isIOS() && kind === "image") return { kind: "bad", message: LONG_PRESS_HINT };
+  if (isIOS() && kind === "image") return { kind: "bad", message: m.longPress };
 
-  return downloadImage(fileName, objectUrl);
+  return downloadImage(fileName, objectUrl, m);
 }
 
 /**
  * 파일로 내려받는다. iPad Safari에서는 "다운로드" 폴더(파일 앱)에 들어간다.
  */
-export function downloadImage(fileName: string, objectUrl: string): SaveOutcome {
+export function downloadImage(fileName: string, objectUrl: string, m: SaveMessages): SaveOutcome {
   const a = document.createElement("a");
   a.href = objectUrl;
   a.download = fileName;
@@ -54,14 +55,14 @@ export function downloadImage(fileName: string, objectUrl: string): SaveOutcome 
   a.remove();
   return {
     kind: "ok",
-    message: isIOS() ? "다운로드했어요. 파일 앱의 다운로드 폴더에서 볼 수 있어요." : "다운로드를 시작했어요.",
+    message: isIOS() ? m.downloadedIOS : m.downloadStarted,
   };
 }
 
 /** Blob을 바로 내려받는다. 링크 주소는 다운로드가 시작될 시간을 두고 정리한다. */
-export function downloadBlob(blob: Blob, fileName: string): SaveOutcome {
+export function downloadBlob(blob: Blob, fileName: string, m: SaveMessages): SaveOutcome {
   const url = URL.createObjectURL(blob);
-  const outcome = downloadImage(fileName, url);
+  const outcome = downloadImage(fileName, url, m);
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
   return outcome;
 }

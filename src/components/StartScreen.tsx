@@ -2,7 +2,9 @@
 
 import { useEffect, useRef } from "react";
 import { drawLayoutPreview } from "@/lib/canvas";
+import { useI18n } from "@/i18n/I18nProvider";
 import { LAYOUTS, LAYOUT_KEYS, TIMERS, type LayoutKey } from "@/lib/frame";
+import { CHARACTER_ENABLED } from "@/lib/site";
 
 interface Props {
   layout: LayoutKey;
@@ -24,13 +26,15 @@ function LayoutPreview({ layout }: { layout: LayoutKey }) {
 }
 
 export function StartScreen({ layout, timer, onLayout, onTimer, onStart, characterCount, onCharacters }: Props) {
+  const { m } = useI18n();
+  const layouts = m.catalog.layouts;
   return (
     <section id="start" className="screen scroll">
       <div>
         <h1 className="logo">
           Snow<span>Cut</span>
         </h1>
-        <p className="tagline">레이아웃을 고르고 포즈를 준비하세요</p>
+        <p className="tagline">{m.start.tagline}</p>
       </div>
 
       <div className="choices">
@@ -46,9 +50,9 @@ export function StartScreen({ layout, timer, onLayout, onTimer, onStart, charact
               onClick={() => onLayout(key)}
             >
               <LayoutPreview layout={key} />
-              <b>{spec.title}</b>
+              <b>{layouts[key].title}</b>
               <small>
-                {spec.canvas.width}×{spec.canvas.height}px · {spec.paper}
+                {spec.canvas.width}×{spec.canvas.height}px · {layouts[key].paper}
               </small>
             </button>
           );
@@ -56,9 +60,11 @@ export function StartScreen({ layout, timer, onLayout, onTimer, onStart, charact
         <button
           type="button"
           className="layout-card character-card"
-          aria-pressed={characterCount > 0}
-          onClick={onCharacters}
+          aria-pressed={CHARACTER_ENABLED ? characterCount > 0 : undefined}
+          disabled={!CHARACTER_ENABLED}
+          onClick={CHARACTER_ENABLED ? onCharacters : undefined}
         >
+          {!CHARACTER_ENABLED && <span className="soon-badge">{m.common.soonBadge}</span>}
           <span className="character-art" aria-hidden>
             <i />
             <i />
@@ -66,17 +72,23 @@ export function StartScreen({ layout, timer, onLayout, onTimer, onStart, charact
             <i />
             <em>★</em>
           </span>
-          <b>커스텀 캐릭터</b>
-          <small>{characterCount ? `캐릭터 ${characterCount}개 · ${LAYOUTS[layout].title}` : "이미지를 올려 누끼 따기"}</small>
+          <b>{m.start.character.title}</b>
+          <small>
+            {!CHARACTER_ENABLED
+              ? m.common.comingSoon
+              : characterCount
+                ? m.start.character.count(characterCount, layouts[layout].title)
+                : m.start.character.hint}
+          </small>
         </button>
       </div>
 
       <div className="field-label">
-        <span className="eyebrow">타이머</span>
+        <span className="eyebrow">{m.start.timer}</span>
         <div className="seg">
           {TIMERS.map((t) => (
             <button key={t} type="button" data-timer={t} aria-pressed={timer === t} onClick={() => onTimer(t)}>
-              {t}초
+              {m.start.seconds(t)}
             </button>
           ))}
         </div>
@@ -84,7 +96,7 @@ export function StartScreen({ layout, timer, onLayout, onTimer, onStart, charact
 
       <button id="startBtn" className="btn primary big" type="button" onClick={onStart}>
         <span className="dot" />
-        촬영 시작
+        {m.start.start}
       </button>
     </section>
   );

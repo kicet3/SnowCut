@@ -22,6 +22,8 @@ import { CAPTION, LAYOUTS, type LayoutKey } from "@/lib/frame";
 import type { FrameId } from "@/lib/frames";
 import { filterShot } from "@/lib/look/apply";
 import type { FilterId } from "@/lib/look/presets";
+import { useI18n } from "@/i18n/I18nProvider";
+import type { Messages } from "@/i18n/messages";
 
 interface Props {
   layout: LayoutKey;
@@ -56,6 +58,19 @@ function cssVar(name: string): string {
 
 function toPngBlob(canvas: HTMLCanvasElement): Promise<Blob | null> {
   return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+}
+
+/** 누끼 오류를 현재 언어 문구로 바꾼다. 서버가 보낸 detail은 그대로 보여 준다. */
+function cutoutErrorMessage(e: unknown, t: Messages["editor"]["errors"]): string {
+  if (!(e instanceof BgRemoverError)) return t.unknown;
+  switch (e.code) {
+    case "detail":
+      return e.detail ?? t.unknown;
+    case "status":
+      return e.status ? t.status(e.status) : t.unknown;
+    default:
+      return t[e.code];
+  }
 }
 
 function freeCanvas(c: HTMLCanvasElement | null | undefined) {
@@ -103,6 +118,7 @@ function CharacterThumb({ image }: { image: HTMLCanvasElement }) {
 function CutoutStage(props: { cutout: Cutout; stage: RefObject<HTMLDivElement | null>; onPoint: (p: { x: number; y: number }) => void }) {
   const { cutout, stage, onPoint } = props;
   const ref = useRef<HTMLCanvasElement>(null);
+  const { m } = useI18n();
   const { source } = cutout;
   const size = useFit(stage, source.width / source.height);
   useEffect(() => {
@@ -126,7 +142,7 @@ function CutoutStage(props: { cutout: Cutout; stage: RefObject<HTMLDivElement | 
       {cutout.points.map((p, i) => (
         <i key={i} className="cutout-dot" style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%` }} />
       ))}
-      {cutout.busy && <div className="cutout-busy">누끼 따는 중…</div>}
+      {cutout.busy && <div className="cutout-busy">{m.editor.cutout.busy}</div>}
     </div>
   );
 }
@@ -137,6 +153,8 @@ type Gesture =
 
 export function CharacterEditor(props: Props) {
   const { layout, layouts, frame, shots, filter, date, onLayout, onChange, onClose } = props;
+  const { m } = useI18n();
+  const t = m.editor;
   // 끄는 동안(드래그·핀치)에는 여기서만 바꾸고, 손을 떼면 Booth에 알린다.
   const [list, setListState] = useState<Character[]>(props.characters);
   // 렌더가 따라오기 전에 이벤트가 이어져도(빠른 드래그 후 바로 손 떼기) 최신 목록을 쓰도록 ref에도 둔다.
@@ -332,7 +350,7 @@ export function CharacterEditor(props: Props) {
         return { source, points: [], busy: false, error: "" };
       });
     } catch {
-      if (mountedRef.current && seq === uploadSeq.current) setUploadError("이미지를 열지 못했어요. JPG·PNG 파일인지 확인해 주세요.");
+      if (mountedRef.current && seq === uploadSeq.current) setUploadError(t.errors.upload);
     }
   };
 
@@ -355,7 +373,7 @@ export function CharacterEditor(props: Props) {
     abortRef.current = abort;
     try {
       const png = await toPngBlob(source);
-      if (!png) throw new BgRemoverError("이미지를 준비하지 못했어요.");
+      if (!png) throw new BgRemoverError("prepare");
       const result = await removeBackground(png, toImagePoints(points, source.width, source.height), abort.signal);
       const loaded = await loadUpload(result);
       // 응답을 받은 뒤 그림을 푸는 사이에 취소했으면 결과를 버린다.
@@ -366,15 +384,15 @@ export function CharacterEditor(props: Props) {
       // Background-Remover는 처리에 실패해도 원본을 그대로 돌려준다. 투명한 곳이 없으면 실패로 본다.
       if (!hasTransparency(loaded)) {
         freeCanvas(loaded);
-        throw new BgRemoverError("배경을 지우지 못했어요. 캐릭터 위를 다른 곳도 눌러서 다시 해 주세요.");
+        throw new BgRemoverError("notRemoved");
       }
       const trimmed = trimTransparent(loaded);
       freeCanvas(loaded);
-      if (!trimmed) throw new BgRemoverError("피사체를 찾지 못했어요. 캐릭터 위를 다시 눌러 주세요.");
+      if (!trimmed) throw new BgRemoverError("noSubject");
       finishCutout(trimmed);
     } catch (e) {
       if (abort.signal.aborted) return;
-      const message = e instanceof BgRemoverError ? e.message : "누끼를 따지 못했어요. 다시 해 주세요.";
+      const message = cutoutErrorMessage(e, t.errors);
       setCutout((c) => (c ? { ...c, busy: false, error: message } : c));
     }
   };
@@ -384,7 +402,7 @@ export function CharacterEditor(props: Props) {
     // 이미 배경이 투명한 PNG라면 여백만 잘라 쓴다.
     const trimmed = trimTransparent(cutout.source);
     if (!trimmed) {
-      setCutout({ ...cutout, error: "이미지가 전부 투명해요." });
+      setCutout({ ...cutout, error: t.errors.allTransparent });
       return;
     }
     finishCutout(trimmed);
@@ -433,7 +451,7 @@ export function CharacterEditor(props: Props) {
   };
 
   return (
-    <div className="char-editor" role="dialog" aria-modal="true" aria-label="커스텀 캐릭터">
+    <div className="char-editor" role="dialog" aria-modal="true" aria-label={t.title}>
       <div className="char-stage" ref={stageRef}>
         {cutout ? (
           <CutoutStage cutout={cutout} stage={stageRef} onPoint={(p) => setCutout({ ...cutout, points: [...cutout.points, p], error: "" })} />
@@ -452,9 +470,9 @@ export function CharacterEditor(props: Props) {
 
       <aside className="char-panel">
         <header className="char-head">
-          <h2>커스텀 캐릭터</h2>
+          <h2>{t.title}</h2>
           <button type="button" className="btn-ghost" onClick={onClose} disabled={cutout?.busy}>
-            완료
+            {t.done}
           </button>
         </header>
 
@@ -462,19 +480,19 @@ export function CharacterEditor(props: Props) {
           <div className="char-body">
             <p className="kiosk-note">
               {BG_REMOVER_URL
-                ? "남길 캐릭터(피사체) 위를 눌러 점을 찍어 주세요. 여러 군데 누를수록 정확해요."
-                : "누끼 서버가 설정되지 않아 배경을 지울 수 없어요. 배경이 투명한 PNG라면 그대로 쓸 수 있어요."}
+                ? t.cutout.hint
+                : t.cutout.hintNoServer}
             </p>
             {BG_REMOVER_URL && (
               <div className="char-row">
-                <span>찍은 점 {cutout.points.length}개</span>
+                <span>{t.cutout.points(cutout.points.length)}</span>
                 <button
                   type="button"
                   className="btn-ghost small"
                   disabled={!cutout.points.length || cutout.busy}
                   onClick={() => setCutout({ ...cutout, points: cutout.points.slice(0, -1) })}
                 >
-                  마지막 점 지우기
+                  {t.cutout.undoPoint}
                 </button>
               </div>
             )}
@@ -485,14 +503,14 @@ export function CharacterEditor(props: Props) {
             )}
             {BG_REMOVER_URL && (
               <button type="button" className="cta" disabled={!cutout.points.length || cutout.busy} onClick={runCutout}>
-                {cutout.busy ? "누끼 따는 중…" : "누끼 따기"}
+                {cutout.busy ? t.cutout.busy : t.cutout.run}
               </button>
             )}
             <button type="button" className="btn-outline" disabled={cutout.busy} onClick={keepOriginal}>
-              배경 그대로 쓰기
+              {t.cutout.keepOriginal}
             </button>
             <button type="button" className="btn-ghost" onClick={cancelCutout}>
-              취소
+              {t.cutout.cancel}
             </button>
           </div>
         ) : (
@@ -500,12 +518,12 @@ export function CharacterEditor(props: Props) {
             {layouts.length > 1 && (
               <div className="field">
                 <span className="field-label-row">
-                  <b>기본 레이아웃</b>
+                  <b>{t.layout}</b>
                 </span>
-                <div className="seg layouts" role="group" aria-label="기본 레이아웃">
+                <div className="seg layouts" role="group" aria-label={t.layout}>
                   {layouts.map((k) => (
                     <button key={k} type="button" aria-pressed={layout === k} onClick={() => onLayout(k)}>
-                      {LAYOUTS[k].title}
+                      {m.catalog.layouts[k].title}
                     </button>
                   ))}
                 </div>
@@ -514,8 +532,8 @@ export function CharacterEditor(props: Props) {
 
             <div className="field">
               <span className="field-label-row">
-                <b>캐릭터</b>
-                <small>{list.length ? "눌러서 고르고, 끌어서 옮겨요" : "이미지를 올려 시작해요"}</small>
+                <b>{t.characters.label}</b>
+                <small>{list.length ? t.characters.hintPick : t.characters.hintEmpty}</small>
               </span>
               <div className="char-list">
                 {list.map((c) => (
@@ -524,7 +542,7 @@ export function CharacterEditor(props: Props) {
                     type="button"
                     className="char-thumb"
                     aria-pressed={c.id === selected}
-                    aria-label={`캐릭터 ${c.id}`}
+                    aria-label={t.characters.item(c.id)}
                     onClick={() => setSelected(c.id)}
                   >
                     <CharacterThumb image={c.image} />
@@ -532,7 +550,7 @@ export function CharacterEditor(props: Props) {
                 ))}
                 <button type="button" className="char-thumb add" onClick={() => fileRef.current?.click()}>
                   <span aria-hidden>＋</span>
-                  <small>이미지 올리기</small>
+                  <small>{t.characters.upload}</small>
                 </button>
               </div>
               <input
@@ -556,7 +574,7 @@ export function CharacterEditor(props: Props) {
               <>
                 <label className="field">
                   <span className="field-label-row">
-                    <b>크기</b>
+                    <b>{t.size}</b>
                     <small>{Math.round(current.size * 100)}%</small>
                   </span>
                   <input
@@ -570,7 +588,7 @@ export function CharacterEditor(props: Props) {
                 </label>
                 <label className="field">
                   <span className="field-label-row">
-                    <b>회전</b>
+                    <b>{t.rotation}</b>
                     <small>{current.rotation}°</small>
                   </span>
                   <input
@@ -583,7 +601,7 @@ export function CharacterEditor(props: Props) {
                   />
                 </label>
                 <label className="toggle">
-                  <span>흰 테두리 (스티커)</span>
+                  <span>{t.outline}</span>
                   <input
                     type="checkbox"
                     role="switch"
@@ -593,13 +611,13 @@ export function CharacterEditor(props: Props) {
                 </label>
                 <div className="char-actions">
                   <button type="button" className="btn-ghost" onClick={() => update(current.id, { flip: !current.flip })}>
-                    좌우 반전
+                    {t.flip}
                   </button>
                   <button type="button" className="btn-ghost" onClick={() => bringFront(current.id)} disabled={list.at(-1)?.id === current.id}>
-                    맨 앞으로
+                    {t.bringFront}
                   </button>
                   <button type="button" className="btn-ghost danger" onClick={() => remove(current.id)}>
-                    삭제
+                    {t.remove}
                   </button>
                 </div>
               </>
