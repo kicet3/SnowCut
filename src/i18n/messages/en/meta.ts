@@ -4,7 +4,7 @@ import type { Messages } from "../ko";
 const meta: Messages["meta"] = {
   siteTitle: "SnowCut · Free Online Photo Booth for 4-Cut Photo Strips",
   siteDescription:
-    "SnowCut is a free online photo booth that runs right in your browser, no app needed. Make 4-cut photo strips with 6 layouts, 21 frames and 11 filters, save a video of your shoot, and print on a Canon SELPHY. Your photos never leave your device.",
+    "SnowCut is a free online photo booth that runs right in your browser, no app needed. Make 4-cut photo strips with 6 layouts, 21 frames and 11 filters, save a video of your shoot, and print on postcard paper. Your photos never leave your device.",
   keywords: [
     "photo booth",
     "online photo booth",

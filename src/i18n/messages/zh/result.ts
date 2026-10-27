@@ -24,7 +24,7 @@ const result: Messages["result"] = {
   savePhoto: "保存照片",
   downloadPhoto: "下载为文件",
   print: {
-    title: "打印（佳能 SELPHY CP1500）",
+    title: "用明信片纸打印",
     countLabel: "打印份数",
     decrease: "减少份数",
     increase: "增加份数",
@@ -32,16 +32,15 @@ const result: Messages["result"] = {
     pages: (n: number) => `（${n} 张纸）`,
     print: "打印",
     printFile: "打印用图片",
-    // 인쇄 안내: "인쇄 창에서 프린터 <b>SELPHY CP1500</b>, 용지 <b>엽서(100×148mm)</b>, <b>테두리 없음</b>을 고르세요."
+    // 인쇄 안내: "请在打印窗口中将纸张设为<b>明信片（100×148mm）</b>，并选择<b>无边框</b>。"
     guide: {
-      beforePrinter: "请在打印窗口中将打印机设为 ",
-      printer: "SELPHY CP1500",
-      beforePaper: "，纸张设为",
+      beforePaper: "请在打印窗口中将纸张设为",
       paper: "明信片（100×148mm）",
       beforeBorderless: "，并选择",
       borderless: "无边框",
       after: "。",
     },
+    printerNote: "作者使用佳能 SELPHY CP1500 打印。如果使用普通打印机，请放入明信片尺寸的光面相纸。",
     twoPerSheet: "一张纸会印出两条，请沿中间的标记裁开。",
   },
   video: {

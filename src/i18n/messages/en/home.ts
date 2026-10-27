@@ -12,14 +12,14 @@ const home: Messages["home"] = {
   /** 검색·AI 요약용 한 문단 정의 (화면에도 보인다) */
   about: {
     title: "What is SnowCut?",
-    body: "SnowCut is a free online photo booth for 4-cut photo strips that works right in your web browser, with no sign-up or app install. Take 3, 4 or 6 shots in a row with your iPad, phone or laptop camera, decorate them with frames and filters, then save to your photo library or print directly on a Canon SELPHY. Your photos and videos never leave your device.",
+    body: "SnowCut is a free online photo booth for 4-cut photo strips that works right in your web browser, with no sign-up or app install. Take 3, 4 or 6 shots in a row with your iPad, phone or laptop camera, decorate them with frames and filters, then save to your photo library or print directly on postcard paper. Your photos and videos never leave your device.",
   },
   split: {
     howSmall: "HOW TO",
     howTitle: ["Shoot in", "3 easy steps"],
     howButton: "See how",
     printSmall: "PRINT",
-    printTitle: ["Shoot, then print", "on SELPHY"],
+    printTitle: ["Shoot, then print", "on postcards"],
     printButton: "Start shooting",
   },
   frames: { title: (n: number) => `${n} frames`, sub: "You can choose one after you shoot" },
@@ -36,7 +36,7 @@ const home: Messages["home"] = {
       { icon: "✿", title: "21 frames", body: "Basic · Pattern · Mood · Seasonal. Switch to any frame you like after shooting." },
       { icon: "◐", title: "11 filters", body: "Bright, vivid, film, B&W… Filters apply only to the photos, so frame colors stay the same." },
       { icon: "▶", title: "Session video", body: "A video of your shoot is recorded too. Save it along with your photos." },
-      { icon: "⎙", title: "Instant printing", body: "Print sized for Canon SELPHY CP1500 postcard paper. Vertical strips print two per sheet." },
+      { icon: "⎙", title: "Instant printing", body: "Prints sized for postcard paper (100×148 mm). Vertical strips print two per sheet." },
       { icon: "◎", title: "External cameras", body: "Use your laptop webcam or a USB-connected camera (like the Nikon Zf)." },
     ],
     character: {
@@ -79,7 +79,7 @@ const home: Messages["home"] = {
       },
       {
         q: "Can I print?",
-        a: "Yes. It prints sized for Canon SELPHY CP1500 postcard paper (100×148 mm, borderless). Vertical strips fit two per sheet.",
+        a: "Yes. Print on postcard paper (100×148 mm, borderless). The creator uses a Canon SELPHY CP1500; with a regular printer, use glossy postcard-size photo paper. Vertical strips fit two per sheet.",
       },
       {
         q: "My camera won't turn on.",

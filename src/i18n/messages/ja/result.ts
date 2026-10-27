@@ -24,7 +24,7 @@ const result: Messages["result"] = {
   savePhoto: "写真を保存",
   downloadPhoto: "ファイルでダウンロード",
   print: {
-    title: "プリンターで印刷（Canon SELPHY CP1500）",
+    title: "はがきサイズ用紙に印刷",
     countLabel: "印刷部数",
     decrease: "部数を減らす",
     increase: "部数を増やす",
@@ -32,16 +32,15 @@ const result: Messages["result"] = {
     pages: (n: number) => `（用紙${n}枚）`,
     print: "印刷",
     printFile: "印刷用画像",
-    // "印刷画面でプリンター <b>SELPHY CP1500</b>、用紙 <b>はがき(100×148mm)</b>、<b>フチなし</b>を選んでください。"
+    // 인쇄 안내: "印刷画面で用紙は<b>はがき（100×148mm）</b>、<b>フチなし</b>を選んでください。"
     guide: {
-      beforePrinter: "印刷画面でプリンターは",
-      printer: "SELPHY CP1500",
-      beforePaper: "、用紙は",
+      beforePaper: "印刷画面で用紙は",
       paper: "はがき（100×148mm）",
       beforeBorderless: "、",
       borderless: "フチなし",
       after: "を選んでください。",
     },
+    printerNote: "制作者はCanon SELPHY CP1500で印刷しています。一般的なプリンターを使う場合は、はがきサイズの光沢紙をセットしてください。",
     twoPerSheet: "1枚に2つずつ印刷されるので、中央の目印に沿って切ってください。",
   },
   video: {

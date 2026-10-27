@@ -22,7 +22,7 @@ const result = {
   savePhoto: "사진 저장",
   downloadPhoto: "파일로 다운로드",
   print: {
-    title: "프린터 인쇄 (캐논 SELPHY CP1500)",
+    title: "엽서 용지로 인쇄",
     countLabel: "인쇄 수량",
     decrease: "수량 줄이기",
     increase: "수량 늘리기",
@@ -30,16 +30,15 @@ const result = {
     pages: (n: number) => `(용지 ${n}장)`,
     print: "인쇄",
     printFile: "인쇄용 이미지",
-    // 인쇄 안내: "인쇄 창에서 프린터 <b>SELPHY CP1500</b>, 용지 <b>엽서(100×148mm)</b>, <b>테두리 없음</b>을 고르세요."
+    // 인쇄 안내: "인쇄 창에서 용지 <b>엽서(100×148mm)</b>, <b>테두리 없음</b>을 고르세요."
     guide: {
-      beforePrinter: "인쇄 창에서 프린터 ",
-      printer: "SELPHY CP1500",
-      beforePaper: ", 용지 ",
+      beforePaper: "인쇄 창에서 용지 ",
       paper: "엽서(100×148mm)",
       beforeBorderless: ", ",
       borderless: "테두리 없음",
       after: "을 고르세요.",
     },
+    printerNote: "제작자는 캐논 SELPHY CP1500으로 인쇄해요. 일반 프린터를 쓴다면 엽서 크기의 광택 인화지를 넣어 인쇄하세요.",
     twoPerSheet: " 한 장에 두 개씩 나오니 가운데 표시를 따라 잘라 주세요.",
   },
   video: {

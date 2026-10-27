@@ -559,8 +559,6 @@ export function ResultScreen(props: Props) {
                   </button>
                 </div>
                 <p className="kiosk-note">
-                  {t.print.guide.beforePrinter}
-                  <b>{t.print.guide.printer}</b>
                   {t.print.guide.beforePaper}
                   <b>{t.print.guide.paper}</b>
                   {t.print.guide.beforeBorderless}
@@ -568,6 +566,7 @@ export function ResultScreen(props: Props) {
                   {t.print.guide.after}
                   {perSheet === 2 && t.print.twoPerSheet}
                 </p>
+                <p className="kiosk-note">{t.print.printerNote}</p>
               </div>
               <p className={`status${status.kind === "none" ? "" : " " + status.kind}`} role="status">
                 {status.message}

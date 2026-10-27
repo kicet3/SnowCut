@@ -24,7 +24,7 @@ const result: Messages["result"] = {
   savePhoto: "Save photo",
   downloadPhoto: "Download file",
   print: {
-    title: "Print (Canon SELPHY CP1500)",
+    title: "Print on postcard paper",
     countLabel: "Print quantity",
     decrease: "Decrease quantity",
     increase: "Increase quantity",
@@ -32,16 +32,15 @@ const result: Messages["result"] = {
     pages: (n: number) => `(${n} ${n === 1 ? "sheet" : "sheets"})`,
     print: "Print",
     printFile: "Print-ready image",
-    // 인쇄 안내: "In the print dialog, choose <b>SELPHY CP1500</b> as the printer, <b>Postcard (100×148 mm)</b> as the paper size, and <b>Borderless</b>."
+    // 인쇄 안내: "In the print dialog, choose <b>Postcard (100×148 mm)</b> as the paper size and <b>Borderless</b>."
     guide: {
-      beforePrinter: "In the print dialog, choose ",
-      printer: "SELPHY CP1500",
-      beforePaper: " as the printer, ",
+      beforePaper: "In the print dialog, choose ",
       paper: "Postcard (100×148 mm)",
-      beforeBorderless: " as the paper size, and ",
+      beforeBorderless: " as the paper size and ",
       borderless: "Borderless",
       after: ".",
     },
+    printerNote: "The creator prints with a Canon SELPHY CP1500. If you use a regular printer, load glossy postcard-size photo paper.",
     twoPerSheet: " Each sheet holds two strips, so cut along the center mark.",
   },
   video: {
