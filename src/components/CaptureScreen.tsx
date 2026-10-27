@@ -8,6 +8,7 @@ import { photoAspect, type LayoutKey } from "@/lib/frame";
 import { coverTransform } from "@/lib/letterbox";
 import { recordCamera, type Recording } from "@/lib/recorder";
 import { playShutter, unlockSound } from "@/lib/sound";
+import { CameraDebug } from "./CameraDebug";
 import { ShotThumb } from "./ShotThumb";
 
 interface Props {
@@ -40,7 +41,9 @@ export function CaptureScreen(props: Props) {
   const t = m.capture;
   // 노트북에 USB로 연결한 카메라(니콘 Zf 등 UVC 웹캠)를 고를 수 있다. 고른 카메라는 기억해 둔다.
   const [cameraId, setCameraId] = useState<string | null>(savedCamera);
-  const { videoRef, mode, failure, grabFrame, getStream, getCrop, crop, devices, activeId, restart } = useCamera(cameraId, t.camera);
+  const { videoRef, mode, failure, grabFrame, getStream, getCrop, getLog, crop, devices, activeId, restart } = useCamera(cameraId, t.camera);
+  // 주소에 ?debug=camera가 있으면 진단 창을 띄운다 (촬영 화면은 클라이언트에서만 그려진다).
+  const [debug] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("debug") === "camera");
   // 미리보기에서 카메라 화면의 검은 띠를 가리도록 비디오를 키운다. 그러려면 비디오 요소 크기를 알아야 한다.
   const [viewSize, setViewSize] = useState({ w: 0, h: 0 });
   useEffect(() => {
@@ -353,6 +356,7 @@ export function CaptureScreen(props: Props) {
       </div>
 
       {flashKey > 0 && <div key={flashKey} className="flash on" />}
+      {debug && <CameraDebug videoRef={videoRef} mode={mode} crop={crop?.rect ?? null} getStream={getStream} getLog={getLog} />}
     </section>
   );
 }

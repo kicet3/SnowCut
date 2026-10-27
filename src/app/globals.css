@@ -150,6 +150,12 @@ button { cursor: pointer; }
   background: var(--panel);
 }
 .viewfinder video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+/* ?debug=camera 진단 창 */
+.camera-debug {
+  position: fixed; left: 8px; bottom: 8px; z-index: 50; max-width: min(560px, calc(100vw - 16px)); max-height: 60vh; overflow: auto;
+  margin: 0; padding: 10px 12px; border-radius: 10px; background: rgba(0,0,0,.82); color: #9dffb0;
+  font: 12px/1.45 ui-monospace, Menlo, monospace; white-space: pre-wrap; pointer-events: auto;
+}
 /* 촬영 순서 표시: 아이패드에서만 화면 오른쪽 위에 보인다 (아래 태블릿 규칙) */
 .vf-counter { display: none; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

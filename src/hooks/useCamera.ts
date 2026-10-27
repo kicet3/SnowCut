@@ -103,6 +103,8 @@ export function useCamera(deviceId: string | null, text: CameraMessages) {
   /** 검은 띠를 뺀 실제 화면 영역 (원본 픽셀)과 그때의 원본 크기. 띠가 없으면 null */
   const [crop, setCrop] = useState<{ rect: Rect; w: number; h: number } | null>(null);
   const cropRef = useRef<Rect | null>(null);
+  /** ?debug=camera 진단 기록 (연결 시도·첫 화면까지 걸린 시간 등) */
+  const logRef = useRef<string[]>([]);
   // 문구가 바뀌어도 카메라를 다시 연결하지 않도록 최신 값만 ref로 본다.
   const textRef = useRef(text);
   useEffect(() => {
@@ -138,6 +140,12 @@ export function useCamera(deviceId: string | null, text: CameraMessages) {
       }
     };
 
+    const t0 = performance.now();
+    const log = (msg: string) => {
+      logRef.current = [...logRef.current.slice(-19), `${Math.round(performance.now() - t0)}ms ${msg}`];
+    };
+    log(`연결 시작 (session ${session}, device ${deviceId ? deviceId.slice(0, 8) : "기본"})`);
+
     (async () => {
       if (!navigator.mediaDevices?.getUserMedia) {
         setFailure("unavailable");
@@ -158,7 +166,10 @@ export function useCamera(deviceId: string | null, text: CameraMessages) {
       try {
         let stream: MediaStream | null = null;
         for (const size of SIZES) {
+          log(`요청 ${JSON.stringify(size)}`);
           const next = await open(size);
+          const st = next.getVideoTracks()[0]?.getSettings();
+          log(`열림 ${st?.width}x${st?.height} ${st?.frameRate ?? "?"}fps muted=${next.getVideoTracks()[0]?.muted}`);
           if (cancelled) {
             next.getTracks().forEach((t) => t.stop());
             return;
@@ -171,15 +182,18 @@ export function useCamera(deviceId: string | null, text: CameraMessages) {
           // 재생 요청의 결과는 기다리지 않는다 (화면이 오면 waitForFrame이 알아챈다).
           videoEl.play().catch(() => {});
           if (await waitForFrame(videoEl, FIRST_FRAME_TIMEOUT, () => cancelled)) {
+            log(`첫 화면 ${videoEl.videoWidth}x${videoEl.videoHeight}`);
             stream = next;
             break;
           }
+          log(`화면 없음 (readyState ${videoEl.readyState}, ${videoEl.videoWidth}x${videoEl.videoHeight})`);
           // 카메라는 열렸지만 화면이 오지 않는다: 닫고 다음 크기로 다시 연다.
           next.getTracks().forEach((t) => t.stop());
           videoEl.srcObject = null;
           if (cancelled) return;
         }
         if (!stream) {
+          log("세 번 모두 화면 없음 → 안내 표시");
           setMode("stalled");
           void listCameras(textRef.current).then((list) => {
             if (!cancelled) setDevices(list);
@@ -201,6 +215,7 @@ export function useCamera(deviceId: string | null, text: CameraMessages) {
         if (cancelled) return;
         // 권한 거부는 브라우저(사이트 설정)나 기기 설정(아이패드 설정 → Chrome → 카메라)에서 막힌 경우다.
         const name = err instanceof DOMException ? err.name : "";
+        log(`실패 ${name || String(err)}`);
         setFailure(name === "NotAllowedError" || name === "SecurityError" ? "denied" : "unavailable");
         setMode("file");
       }
@@ -288,8 +303,11 @@ export function useCamera(deviceId: string | null, text: CameraMessages) {
   /** 녹화에 쓸 카메라 스트림 */
   const getStream = useCallback(() => streamRef.current, []);
 
+  /** 진단 기록 (?debug=camera) */
+  const getLog = useCallback(() => logRef.current, []);
+
   /** 녹화 중에도 최신 값을 읽도록 함수로 준다. */
   const getCrop = useCallback(() => cropRef.current, []);
 
-  return { videoRef, mode, failure, grabFrame, getStream, getCrop, crop, devices, activeId, restart };
+  return { videoRef, mode, failure, grabFrame, getStream, getCrop, getLog, crop, devices, activeId, restart };
 }

@@ -82,3 +82,33 @@ describe("미리보기 확대", () => {
     expect(coverTransform({ w: 100, h: 100 }, { w: 200, h: 200 }, null, false)).toBe("none");
   });
 });
+
+describe("글자가 찍힌 띠", () => {
+  /** rect 바깥 띠의 지정한 줄들에 흰 글자 같은 점을 찍는다 (줄마다 share 비율만큼) */
+  function withText(px: Uint8ClampedArray, w: number, ys: number[], share: number) {
+    for (const y of ys)
+      for (let x = 0; x < w; x++)
+        if ((x * 37) % 100 < share * 100) {
+          const i = (y * w + x) * 4;
+          px[i] = px[i + 1] = px[i + 2] = 255;
+        }
+    return px;
+  }
+
+  it("아래 띠에 카메라 정보 글자가 있어도 위 띠와 같은 두께로 잘라 낸다", () => {
+    const px = withText(frame(240, 180, { x: 0, y: 22, w: 240, h: 135 }), 240, [165, 166, 167, 168, 169, 170], 0.3);
+    expect(findContentRect(px, 240, 180)).toEqual({ x: 0, y: 23, w: 240, h: 133 });
+  });
+
+  it("위아래 띠 모두 글자가 있어도 두께가 같으면 잘라 낸다", () => {
+    const px = withText(frame(240, 180, { x: 0, y: 22, w: 240, h: 135 }), 240, [5, 6, 7, 165, 166, 167], 0.3);
+    expect(findContentRect(px, 240, 180)).toEqual({ x: 0, y: 23, w: 240, h: 133 });
+  });
+
+  it("띠가 없는 장면의 아래쪽이 어둡기만 하면 자르지 않는다", () => {
+    // 아래 20%가 어두운 옷(밝은 점 30%)인 장면: 위에는 띠가 없다
+    const px = frame(240, 135, { x: 0, y: 0, w: 240, h: 108 });
+    withText(px, 240, Array.from({ length: 27 }, (_, i) => 108 + i), 0.3);
+    expect(findContentRect(px, 240, 135)).toBeNull();
+  });
+});
