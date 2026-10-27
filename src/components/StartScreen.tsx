@@ -10,6 +10,9 @@ interface Props {
   onLayout: (layout: LayoutKey) => void;
   onTimer: (seconds: number) => void;
   onStart: () => void;
+  /** 올려 둔 커스텀 캐릭터 수 */
+  characterCount: number;
+  onCharacters: () => void;
 }
 
 function LayoutPreview({ layout }: { layout: LayoutKey }) {
@@ -20,7 +23,7 @@ function LayoutPreview({ layout }: { layout: LayoutKey }) {
   return <canvas ref={ref} />;
 }
 
-export function StartScreen({ layout, timer, onLayout, onTimer, onStart }: Props) {
+export function StartScreen({ layout, timer, onLayout, onTimer, onStart, characterCount, onCharacters }: Props) {
   return (
     <section id="start" className="screen scroll">
       <div>
@@ -50,6 +53,22 @@ export function StartScreen({ layout, timer, onLayout, onTimer, onStart }: Props
             </button>
           );
         })}
+        <button
+          type="button"
+          className="layout-card character-card"
+          aria-pressed={characterCount > 0}
+          onClick={onCharacters}
+        >
+          <span className="character-art" aria-hidden>
+            <i />
+            <i />
+            <i />
+            <i />
+            <em>★</em>
+          </span>
+          <b>커스텀 캐릭터</b>
+          <small>{characterCount ? `캐릭터 ${characterCount}개 · ${LAYOUTS[layout].title}` : "이미지를 올려 누끼 따기"}</small>
+        </button>
       </div>
 
       <div className="field-label">

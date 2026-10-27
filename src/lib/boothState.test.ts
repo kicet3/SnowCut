@@ -88,4 +88,10 @@ describe("boothState", () => {
     expect(reducer(done, { type: "layout", layout: "hero" }).layout).toBe("hero");
     expect(reducer(done, { type: "layout", layout: "grid6" }).layout).toBe(done.layout);
   });
+
+  it("커스텀 캐릭터는 새로 찍어도 남는다", () => {
+    const characters = [{ id: 1 }] as unknown as BoothState["characters"];
+    const s = run(initialState, { type: "characters", characters }, { type: "start" }, { type: "reset" });
+    expect(s.characters).toBe(characters);
+  });
 });

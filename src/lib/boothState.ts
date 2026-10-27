@@ -1,4 +1,5 @@
 import type { Shot } from "./canvas";
+import type { Character } from "./character";
 import { LAYOUTS, type LayoutKey } from "./frame";
 import { DEFAULT_FRAME, type FrameId } from "./frames";
 import { DEFAULT_FILTER, type FilterId } from "./look/presets";
@@ -23,6 +24,8 @@ export interface BoothState {
   video: Blob | null;
   /** 새 촬영을 시작할 때마다 증가. 늦게 끝난 녹화가 다른 촬영에 붙지 않게 한다. */
   session: number;
+  /** 프레임 위에 얹는 커스텀 캐릭터. 새로 찍어도 지우지 않는다. */
+  characters: Character[];
 }
 
 export type Action =
@@ -37,7 +40,8 @@ export type Action =
   | { type: "complete" }
   | { type: "reset" }
   | { type: "filter"; filter: FilterId }
-  | { type: "video"; session: number; video: Blob };
+  | { type: "video"; session: number; video: Blob }
+  | { type: "characters"; characters: Character[] };
 
 const emptyShots = (layout: LayoutKey): (Shot | null)[] => Array(LAYOUTS[layout].count).fill(null);
 
@@ -54,6 +58,7 @@ export const initialState: BoothState = {
   filter: DEFAULT_FILTER,
   video: null,
   session: 0,
+  characters: [],
 };
 
 // 리듀서는 순수 함수로 둔다. 캔버스 메모리 해제는 dispatch 전에 이벤트 핸들러에서 한다.
@@ -138,5 +143,7 @@ export function reducer(state: BoothState, action: Action): BoothState {
       return { ...state, filter: action.filter };
     case "video":
       return action.session === state.session ? { ...state, video: action.video } : state;
+    case "characters":
+      return { ...state, characters: action.characters };
   }
 }

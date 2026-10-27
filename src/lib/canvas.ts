@@ -1,4 +1,5 @@
 import { LAYOUTS, captionRect, formatDate, photoRects, type LayoutKey, type Rect } from "./frame";
+import { drawCharacters, type Character } from "./character";
 import { frameDesign, type FrameContext, type FrameId } from "./frames";
 
 /** 촬영본. 좌우 반전·축소까지 끝난 캔버스다. */
@@ -98,6 +99,8 @@ export interface CompositeOptions {
   process?: (shot: Shot, index: number, cell: Rect) => Drawable;
   /** 1보다 작으면 축소 렌더 (프레임 고르기 썸네일). 좌표는 그대로 두고 캔버스만 줄인다. */
   scale?: number;
+  /** 프레임 장식 위에 얹는 커스텀 캐릭터 (문구는 그 위에 쓴다) */
+  characters?: Character[];
 }
 
 const MONO = 'ui-monospace, Menlo, "Courier New", monospace';
@@ -185,6 +188,8 @@ export function drawComposite(canvas: HTMLCanvasElement, o: CompositeOptions): v
     design.over(f);
     ctx.restore();
   }
+
+  if (o.characters?.length) drawCharacters(ctx, W, H, o.characters, scale);
 
   const t = design.text;
   // 문구가 비어 있으면 아무것도 쓰지 않는다 (날짜만 있으면 날짜만 가운데에).

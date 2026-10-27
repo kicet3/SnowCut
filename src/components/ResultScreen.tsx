@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { canvasToJpeg, drawComposite, drawCover, type Shot } from "@/lib/canvas";
+import type { Character } from "@/lib/character";
 import { CAPTION, LAYOUTS, compatibleLayouts, fileNameFor, photoAspect, type LayoutKey } from "@/lib/frame";
 import { FRAMES, FRAME_CATEGORIES, frameDesign, type FrameCategory, type FrameId } from "@/lib/frames";
 import { filterShot } from "@/lib/look/apply";
@@ -22,13 +23,15 @@ interface Props {
   filter: FilterId;
   /** 촬영하는 동안 녹화한 영상 (녹화를 못 했으면 null) */
   video: Blob | null;
+  /** 프레임 위에 얹는 커스텀 캐릭터 */
+  characters: Character[];
+  onCharacters: () => void;
   onLayout: (layout: LayoutKey) => void;
   onFrame: (frame: FrameId) => void;
   onFilter: (filter: FilterId) => void;
   onShowDate: (show: boolean) => void;
   onRetake: (index: number) => void;
   onNew: () => void;
-  /** 로고를 다섯 번 누를 때마다 1씩 오른다. 오르면 캐릭터 변환 창을 연다. */
   /** 꾸미기 단계. 다시 찍고 돌아와도 이어지도록 Booth가 들고 있다. */
   step: ResultStep;
   onStep: (step: ResultStep) => void;
@@ -62,10 +65,11 @@ function FrameCard(props: {
   shots: (Shot | null)[];
   revision: number;
   date: Date | null;
+  characters: Character[];
   selected: boolean;
   onPick: () => void;
 }) {
-  const { frame, layout, shots, revision, date, selected, onPick } = props;
+  const { frame, layout, shots, revision, date, characters, selected, onPick } = props;
   const ref = useRef<HTMLCanvasElement>(null);
   const time = date?.getTime() ?? 0;
   useEffect(() => {
@@ -84,11 +88,12 @@ function FrameCard(props: {
         titleFont: cssVar("--font-print"),
         dateFont: cssVar("--font-body"),
         scale,
+        characters,
       });
     } catch {}
     // shots는 revision이 바뀔 때만 달라진다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [frame, layout, revision, time]);
+  }, [frame, layout, revision, time, characters]);
   return (
     <button type="button" className="pick-card" data-frame={frame} aria-pressed={selected} onClick={onPick}>
       <span
@@ -139,8 +144,10 @@ function FilterCard(props: {
 }
 
 export function ResultScreen(props: Props) {
-  const { layout, frame, showDate, shots, revision, capturedAt, filter, video } = props;
-  const key = `${layout}|${frame}|${showDate}|${revision}|${capturedAt.getTime()}|${filter}`;
+  const { layout, frame, showDate, shots, revision, capturedAt, filter, video, characters } = props;
+  // 캐릭터는 바꿀 때마다 새 배열이 오므로 배치 값으로 비교한다.
+  const characterKey = characters.map((c) => `${c.id}:${c.x},${c.y},${c.size},${c.rotation},${+c.flip},${+c.outline}`).join(";");
+  const key = `${layout}|${frame}|${showDate}|${revision}|${capturedAt.getTime()}|${filter}|${characterKey}`;
   const [rendered, setRendered] = useState<Rendered | null>(null);
   const [status, setStatus] = useState<SaveOutcome>(NO_STATUS);
   const [saving, setSaving] = useState(false);
@@ -182,6 +189,7 @@ export function ResultScreen(props: Props) {
           dateFont,
           // 필터는 사진 칸에 보이는 부분에만 입힌다. 프레임·문구는 그대로.
           process: (shot, i, cell) => filterShot(shot, filter, i + 1, cell),
+          characters,
         });
         blob = await canvasToJpeg(compositeRef.current);
       } catch {}
@@ -423,6 +431,7 @@ export function ResultScreen(props: Props) {
                     shots={shots}
                     revision={revision}
                     date={date}
+                    characters={characters}
                     selected={frame === f.id}
                     onPick={() => change(props.onFrame)(f.id)}
                   />
@@ -463,6 +472,15 @@ export function ResultScreen(props: Props) {
                   onChange={(e) => change(props.onShowDate)(e.target.checked)}
                 />
               </label>
+              <div className="field">
+                <span className="field-label-row">
+                  <b>커스텀 캐릭터</b>
+                  <small>{characters.length ? `${characters.length}개` : "없음"}</small>
+                </span>
+                <button type="button" className="btn-outline" onClick={props.onCharacters}>
+                  {characters.length ? "캐릭터 위치 · 크기 바꾸기" : "캐릭터 추가하기"}
+                </button>
+              </div>
               <div className="field">
                 <b>다시 찍기</b>
                 <div className="retakes" id="retakeThumbs">
