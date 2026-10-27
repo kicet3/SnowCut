@@ -1,9 +1,9 @@
 /**
- * 구글 애드센스 설정. 빌드할 때 환경 변수로 넣는다 (값이 없으면 광고를 그리지 않는다).
+ * 구글 애드센스 설정. 게시자 ID는 기본으로 넣어 두고, 환경 변수로 바꿀 수 있다 (빈 값이면 광고를 끈다).
  *   NEXT_PUBLIC_ADSENSE_CLIENT=ca-pub-0000000000000000
  *   NEXT_PUBLIC_ADSENSE_SLOT_TOP / _MIDDLE / _BOTTOM = 애드센스에서 만든 디스플레이 광고 단위의 data-ad-slot 값
  */
-export const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT ?? "";
+export const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT ?? "ca-pub-6532893388671562";
 
 export const AD_SLOTS = {
   top: process.env.NEXT_PUBLIC_ADSENSE_SLOT_TOP ?? "",

@@ -38,11 +38,11 @@ NEXT_PUBLIC_NAVER_SITE_VERIFICATION=...                   # 네이버 서치어�
 
 ### 구글 애드센스 설정
 
-빌드할 때 환경 변수로 넣습니다(Vercel은 Project Settings → Environment Variables). 값이 없으면 광고를 그리지 않습니다.
+게시자 ID(`ca-pub-6532893388671562`)는 코드에 기본값으로 들어 있어서, 애드센스에서 **자동 광고**만 켜면 메인 페이지에 광고가 나옵니다. 다른 값은 빌드할 때 환경 변수로 넣습니다(Vercel은 Project Settings → Environment Variables). `NEXT_PUBLIC_ADSENSE_CLIENT`를 빈 값으로 두면 광고를 끕니다.
 
 ```bash
-NEXT_PUBLIC_ADSENSE_CLIENT=ca-pub-0000000000000000   # 애드센스 게시자 ID
-NEXT_PUBLIC_ADSENSE_SLOT_TOP=1111111111              # 디스플레이 광고 단위 data-ad-slot (소개 아래)
+NEXT_PUBLIC_ADSENSE_CLIENT=ca-pub-6532893388671562   # 애드센스 게시자 ID (기본값)
+NEXT_PUBLIC_ADSENSE_SLOT_TOP=1111111111              # (선택) 직접 만든 디스플레이 광고 단위 data-ad-slot (소개 아래)
 NEXT_PUBLIC_ADSENSE_SLOT_MIDDLE=2222222222           # (기능 소개 아래)
 NEXT_PUBLIC_ADSENSE_SLOT_BOTTOM=3333333333           # (자주 묻는 질문 아래)
 ```

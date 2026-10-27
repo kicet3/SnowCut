@@ -52,7 +52,11 @@ export function StartScreen({ layout, timer, onLayout, onTimer, onStart, charact
               <LayoutPreview layout={key} />
               <b>{layouts[key].title}</b>
               <small>
-                {spec.canvas.width}×{spec.canvas.height}px · {layouts[key].paper}
+                {/* 휴대폰에서는 픽셀 크기를 빼고 인화지 크기만 보여 준다. */}
+                <span className="layout-px">
+                  {spec.canvas.width}×{spec.canvas.height}px ·{" "}
+                </span>
+                {layouts[key].paper}
               </small>
             </button>
           );
