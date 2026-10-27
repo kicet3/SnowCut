@@ -259,7 +259,7 @@ export function CaptureScreen(props: Props) {
         : t.shoot.remaining(remaining);
 
   return (
-    <section id="capture" className="screen">
+    <section id="capture" className="screen" style={{ "--ratio": aspect } as CSSProperties}>
       <div className="bar">
         <div>
           <button id="backBtn" className="btn ghost" type="button" disabled={running || decoding} onClick={onBack}>
