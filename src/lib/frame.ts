@@ -70,7 +70,7 @@ function hero(W: number, H: number, m: number, g: number, footer: number) {
 export const LAYOUTS: Record<LayoutKey, LayoutSpec> = {
   strip: { title: "세로 4컷", paper: "2×6인치", canvas: { width: 1200, height: 3600 }, count: 4, ...column(1200, 3600, 4, 60, 40, 420) },
   grid: { title: "2×2 그리드", paper: "4×6인치", canvas: { width: 2400, height: 3600 }, count: 4, ...matrix(2400, 3600, 2, 2, 80, 40, 520) },
-  strip3: { title: "세로 3컷", paper: "2×6인치", canvas: { width: 1200, height: 3600 }, count: 3, ...column(1200, 3600, 3, 60, 40, 260) },
+  strip3: { title: "세로 3컷", paper: "2×6인치", canvas: { width: 1200, height: 3600 }, count: 3, ...column(1200, 3600, 3, 60, 40, 640) },
   grid6: { title: "2×3 6컷", paper: "4×6인치", canvas: { width: 2400, height: 3600 }, count: 6, ...matrix(2400, 3600, 2, 3, 80, 30, 480) },
   wide: { title: "가로 4컷", paper: "6×2인치", canvas: { width: 3600, height: 1200 }, count: 4, ...row(3600, 1200, 4, 60, 40, 640) },
   hero: { title: "큰 1컷 + 3컷", paper: "4×6인치", canvas: { width: 2400, height: 3600 }, count: 4, ...hero(2400, 3600, 80, 40, 520) },
