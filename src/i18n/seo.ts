@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ADSENSE_CLIENT } from "@/lib/ads";
 import { GOOGLE_VERIFICATION, NAVER_VERIFICATION, SITE_NAME, SITE_URL, languageAlternates, localeUrl, ogImage } from "@/lib/site";
 import { DEFAULT_LOCALE, LOCALES, OG_LOCALE, localePath, type Locale } from "./config";
 
@@ -20,6 +21,9 @@ export function pageMetadata(locale: Locale, page: PageKey): Metadata {
 
   const other: Record<string, string> = {};
   if (NAVER_VERIFICATION) other["naver-site-verification"] = NAVER_VERIFICATION;
+
+  // 애드센스 사이트 소유 확인. 광고 스크립트는 광고를 켰을 때만 넣으므로 확인은 메타 태그로 한다.
+  const adsense: Record<string, string> = ADSENSE_CLIENT ? { "google-adsense-account": ADSENSE_CLIENT } : {};
 
   return {
     metadataBase: new URL(`${SITE_URL}/`),
@@ -44,6 +48,7 @@ export function pageMetadata(locale: Locale, page: PageKey): Metadata {
     formatDetection: { telephone: false, email: false, address: false },
     category: "photography",
     appleWebApp: { capable: true, title: SITE_NAME, statusBarStyle: "black-translucent" },
+    other: adsense,
     // 다른 언어는 그 언어의 매니페스트 (홈 화면 앱이 그 언어의 촬영 화면으로 열리게)
     ...(locale === DEFAULT_LOCALE ? {} : { manifest: `${BASE}${localePath(locale, "/manifest.webmanifest")}` }),
   };

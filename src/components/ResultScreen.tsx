@@ -12,6 +12,9 @@ import { PRINT_BLEED_MM, drawPrintSheet, marginFit, pagesFor, printCounts, sheet
 import { videoExtension } from "@/lib/recorder";
 import { downloadBlob, downloadImage, saveImage, type SaveOutcome } from "@/lib/saveImage";
 import { CHARACTER_ENABLED } from "@/lib/site";
+import { AD_SLOT_INTERSTITIAL } from "@/lib/ads";
+import { useAdsActive } from "@/lib/useAds";
+import { AdBreak } from "./AdBreak";
 import { ShotThumb } from "./ShotThumb";
 
 interface Props {
@@ -360,6 +363,26 @@ export function ResultScreen(props: Props) {
     setStatus(downloadImage(fileNameFor(capturedAt), rendered.url, t.save));
   };
 
+  // 광고를 켰으면 다운로드·인쇄 버튼을 누를 때 광고 창을 먼저 띄운다. 같은 결과에서는 한 번만 보여 준다.
+  const adsActive = useAdsActive() && !!AD_SLOT_INTERSTITIAL;
+  const resultId = capturedAt.getTime();
+  const [adSeenFor, setAdSeenFor] = useState<number | null>(null);
+  const [adPending, setAdPending] = useState<{ action: string; run: () => void } | null>(null);
+  const withAd = (action: string, run: () => void) => () => {
+    if (!adsActive || adSeenFor === resultId) {
+      run();
+      return;
+    }
+    setAdPending({ action, run });
+  };
+  const continueAfterAd = () => {
+    if (!adPending) return;
+    setAdSeenFor(resultId);
+    setAdPending(null);
+    // 계속 버튼의 클릭 안에서 바로 실행한다 (iOS의 공유·인쇄는 사용자 동작 안에서만 열린다).
+    adPending.run();
+  };
+
   const spec = LAYOUTS[layout];
   const aspect = photoAspect(layout);
   const shape =
@@ -560,10 +583,10 @@ export function ResultScreen(props: Props) {
 
           {step === "save" && (
             <div className="actions">
-              <button id="saveBtn" className="cta" type="button" disabled={stale || saving} onClick={onSave}>
+              <button id="saveBtn" className="cta" type="button" disabled={stale || saving} onClick={withAd(t.savePhoto, onSave)}>
                 {t.savePhoto}
               </button>
-              <button id="downloadBtn" className="btn-outline" type="button" disabled={stale} onClick={onDownload}>
+              <button id="downloadBtn" className="btn-outline" type="button" disabled={stale} onClick={withAd(t.downloadPhoto, onDownload)}>
                 {t.downloadPhoto}
               </button>
               <div className="print-box">
@@ -590,7 +613,7 @@ export function ResultScreen(props: Props) {
                   </button>
                 </div>
                 <div className="clip-actions">
-                  <button id="printBtn" className="btn-outline" type="button" disabled={!printReady} onClick={onPrint}>
+                  <button id="printBtn" className="btn-outline" type="button" disabled={!printReady} onClick={withAd(t.print.print, onPrint)}>
                     {t.print.print}
                   </button>
                   <button
@@ -598,7 +621,7 @@ export function ResultScreen(props: Props) {
                     className="btn-outline"
                     type="button"
                     disabled={!printReady}
-                    onClick={onDownloadPrint}
+                    onClick={withAd(t.print.printFile, onDownloadPrint)}
                   >
                     {t.print.printFile}
                   </button>
@@ -640,11 +663,11 @@ export function ResultScreen(props: Props) {
                       className="btn-outline"
                       type="button"
                       disabled={saving}
-                      onClick={onSaveVideo}
+                      onClick={withAd(t.video.save, onSaveVideo)}
                     >
                       {t.video.save}
                     </button>
-                    <button id="downloadVideoBtn" className="btn-outline" type="button" onClick={onDownloadVideo}>
+                    <button id="downloadVideoBtn" className="btn-outline" type="button" onClick={withAd(t.video.download, onDownloadVideo)}>
                       {t.video.download}
                     </button>
                   </div>
@@ -685,6 +708,8 @@ export function ResultScreen(props: Props) {
           </div>
         </footer>
       </aside>
+
+      {adPending && <AdBreak action={adPending.action} onContinue={continueAfterAd} onClose={() => setAdPending(null)} />}
 
       {sheet && (
         // 인쇄할 때만 보이는 엽서 크기 시트 (globals.css의 @media print)

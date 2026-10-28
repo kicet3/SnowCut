@@ -1,10 +1,9 @@
 import type { ReactNode } from "react";
-import { AdSlot } from "@/components/AdSlot";
+import { AdSlot, AdsenseLoader } from "@/components/AdSlot";
 import { FramePreview } from "@/components/FramePreview";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { localePath, type Locale } from "@/i18n/config";
 import { getMessages } from "@/i18n/messages";
-import { ADSENSE_CLIENT } from "@/lib/ads";
 import { LAYOUTS, LAYOUT_KEYS } from "@/lib/frame";
 import { FRAMES, FRAME_CATEGORIES } from "@/lib/frames";
 import { CHARACTER_ENABLED, homeJsonLd, jsonLdScript } from "@/lib/site";
@@ -37,7 +36,7 @@ function Section({ id, title, sub, children, tint }: { id?: string; title: strin
 export function HomeView({ locale }: { locale: Locale }) {
   const msg = getMessages(locale);
   const { common, home: m, catalog } = msg;
-  // 촬영 화면은 일반 링크로 연다. 화면 전체를 새로 불러오므로 메인 페이지의 광고 스크립트가 촬영 화면으로 따라가지 않는다.
+  // 촬영 화면은 일반 링크로 연다. 화면 전체를 새로 불러오므로 메인 페이지의 광고 스크립트(자동 광고)가 촬영 화면으로 따라가지 않는다.
   const booth = BASE + localePath(locale, "/booth");
   const homeHref = BASE + localePath(locale, "/");
   const character = m.features.character;
@@ -49,14 +48,8 @@ export function HomeView({ locale }: { locale: Locale }) {
   return (
     <div className="home light">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(homeJsonLd(locale, msg)) }} />
-      {/* 애드센스 스크립트는 메인 페이지에만 넣는다 (React가 <head>로 옮기고 한 번만 불러온다). */}
-      {ADSENSE_CLIENT && (
-        <script
-          async
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
-          crossOrigin="anonymous"
-        />
-      )}
+      {/* 애드센스 스크립트는 관리자 모드에서 광고를 켰을 때만 브라우저에서 넣는다 (기본 꺼짐). 소유 확인은 메타 태그로 한다. */}
+      <AdsenseLoader />
       <header className="home-bar">
         <nav className="home-nav" aria-label={m.nav.label}>
           <a href="#frames">{m.nav.frames}</a>

@@ -1,7 +1,7 @@
 import { Booth } from "@/components/Booth";
 import { pageMetadata } from "@/i18n/seo";
 
-// 촬영 화면에는 광고를 넣지 않는다. 메인 페이지에서 일반 링크(전체 새로고침)로 들어오므로 광고 스크립트도 없다.
+// 촬영 화면에는 광고 자리를 두지 않는다. 광고를 켜면 다운로드·인쇄를 누를 때만 광고 창을 띄운다 (ResultScreen).
 export const metadata = pageMetadata("ko", "booth");
 
 export default function BoothPage() {

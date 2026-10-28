@@ -3,6 +3,7 @@ import { Black_Han_Sans, IBM_Plex_Sans_KR, Jua } from "next/font/google";
 import type { ReactNode } from "react";
 import { DEFAULT_LOCALE, HTML_LANG, geoRedirectScript, type Locale } from "@/i18n/config";
 import { I18nProvider } from "@/i18n/I18nProvider";
+import { AdminGate } from "@/components/AdminGate";
 import "@/app/globals.css";
 
 // 한글 글꼴은 미리 불러올 subset이 없어서 preload를 끈다. 필요한 글자 범위만 그때그때 받는다.
@@ -33,7 +34,11 @@ export function SiteDocument({ locale, children }: { locale: Locale; children: R
         </head>
       )}
       <body>
-        <I18nProvider locale={locale}>{children}</I18nProvider>
+        <I18nProvider locale={locale}>
+          {children}
+          {/* 오른쪽 위 구석을 5번 누르면 열리는 관리자 모드 (광고 켜기/끄기) */}
+          <AdminGate />
+        </I18nProvider>
       </body>
     </html>
   );
